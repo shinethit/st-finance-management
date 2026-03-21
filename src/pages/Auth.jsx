@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useAuth } from '../lib/AuthContext';
 
 export default function Auth() {
-  const { signIn, signUp, signInWithGoogle } = useAuth();
+  const { signIn, signUp } = useAuth();
   const [mode, setMode]         = useState('login'); // 'login' | 'register'
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
@@ -34,14 +34,7 @@ export default function Auth() {
     }
   };
 
-  const handleGoogle = async () => {
-    setLoading(true);
-    const { error } = await signInWithGoogle();
-    if (error) setError(error.message);
-    setLoading(false);
-  };
-
-  return (
+return (
     <div style={{
       minHeight: '100vh',
       background: 'var(--bg)',
@@ -109,17 +102,7 @@ export default function Auth() {
             {loading ? 'Please wait…' : mode === 'login' ? 'Sign In' : 'Create Account'}
           </button>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--text3)', fontSize: 12 }}>
-            <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-            or
-            <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-          </div>
 
-          <button className="btn btn-secondary" style={{ width: '100%', justifyContent: 'center', padding: '11px', gap: 10 }}
-            onClick={handleGoogle} disabled={loading}>
-            <span style={{ fontSize: 16 }}>G</span>
-            Continue with Google
-          </button>
         </div>
       </div>
     </div>
