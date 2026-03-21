@@ -1,6 +1,7 @@
 // src/pages/Budget.jsx — v3 (% of income support)
 import { useState } from 'react';
 import { useBudgets, useCategories, useTransactions } from '../hooks/useData';
+import CategoryPicker from '../lib/CategoryPicker';
 import { useLang } from '../lib/LangContext';
 
 const fmt = n => new Intl.NumberFormat('en-US').format(Math.abs(Number(n)||0));

@@ -447,3 +447,36 @@ export function useCustomTrackers() {
 
   return { data, loading, save, del, reload: load, getTrackerData };
 }
+
+// ── Wallet CRUD (explicit, with balance update) ───────────────
+export function useWalletManager() {
+  const [data,    setData]    = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const { data: rows } = await supabase
+      .from('wallets').select('*').order('created_at', { ascending: true });
+    setData(rows || []);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const save = useCallback(async (item) => {
+    const isNew = !item.id;
+    const payload = { ...item, updated_at: new Date().toISOString() };
+    const { data: row } = isNew
+      ? await supabase.from('wallets').insert(payload).select().single()
+      : await supabase.from('wallets').update(payload).eq('id', item.id).select().single();
+    setData(prev => isNew ? [...prev, row] : prev.map(r => r.id === row.id ? row : r));
+    return row;
+  }, []);
+
+  const del = useCallback(async (id) => {
+    await supabase.from('wallets').delete().eq('id', id);
+    setData(prev => prev.filter(r => r.id !== id));
+  }, []);
+
+  return { data, loading, save, del, reload: load };
+}

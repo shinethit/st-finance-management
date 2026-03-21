@@ -14,6 +14,7 @@ import Settings from './pages/Settings';
 import BulkEntry from './pages/BulkEntry';
 import MyAnalytics from './pages/MyAnalytics';
 import Admin from './pages/Admin';
+import { supabase } from './lib/supabase';
 import './App.css';
 import Logo from './lib/Logo';
 
@@ -62,6 +63,7 @@ const PAGES = {
 
 // ── Search Overlay ─────────────────────────────────────────────
 function SearchOverlay({ onClose }) {
+  const { t } = useLang();
   const [q, setQ] = useState('');
   useEffect(() => {
     const fn = e => e.key === 'Escape' && onClose();
@@ -106,7 +108,7 @@ function NotifDropdown({ onClose }) {
   return (
     <div ref={ref} className="notif-dropdown">
       <div className="notif-header">
-        <span>{t('search')}</span>
+        <span>Notifications</span>
         <button className="btn btn-ghost btn-sm">Clear all</button>
       </div>
       {notifs.map((n,i) => (
@@ -131,6 +133,14 @@ function AppInner() {
   const [theme, setTheme]       = useState('dark');
   const [searchOpen, setSearch] = useState(false);
   const [notifOpen, setNotif]   = useState(false);
+  const [announcements, setAnns] = useState([]);
+
+  // Load active announcements
+  useEffect(() => {
+    supabase.from('announcements').select('*')
+      .eq('is_active', true).order('created_at', { ascending: false })
+      .then(({ data }) => setAnns(data || []));
+  }, []);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -139,7 +149,7 @@ function AppInner() {
   if (loading) return (
     <div style={{ height:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:'var(--bg)' }}>
       <div style={{ textAlign:'center', color:'var(--text3)' }}>
-        <div style={{ fontSize:32, color:'var(--accent)', marginBottom:10 }}>✦</div>
+        <div style={{ display:"flex", justifyContent:"center", marginBottom:10 }}><img src="/icons/logo-transparent.png" width="72" height="72" alt=""/></div>
         <div style={{ fontWeight:600 }}>Loading…</div>
       </div>
     </div>
@@ -207,7 +217,7 @@ function AppInner() {
       <main className="main-content">
         <div className="top-header">
           <div>
-            <div className="top-header-title">{t(currentNav?.labelKey)}</div>
+            <div style={{display:"flex",alignItems:"center",gap:8}}><img src="/icons/logo-transparent.png" width="24" height="24" style={{objectFit:"contain"}} onClick={()=>navigateTo('dashboard')} alt="" /><div className="top-header-title">{t(currentNav?.labelKey)}</div></div>
             <div className="top-header-sub">
               {new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' })}
             </div>
@@ -215,7 +225,7 @@ function AppInner() {
           <div className="top-header-right">
             {/* Theme toggle */}
             <button className="hdr-btn"
-              onClick={() => setTheme(t => t==='dark'?'light':'dark')}
+              onClick={() => setTheme(th => th==='dark'?'light':'dark')}
               title="Toggle theme"
               style={{ fontSize:18 }}>
               {theme==='dark' ? '☀️' : '🌙'}
@@ -237,39 +247,64 @@ function AppInner() {
           </div>
         </div>
 
+        {/* ── Announcement Ticker ── */}
+        {announcements.length > 0 && (
+          <div style={{
+            background: 'linear-gradient(90deg, rgba(255,107,53,0.12), rgba(247,147,30,0.12))',
+            borderBottom: '1px solid rgba(255,107,53,0.2)',
+            overflow: 'hidden', height: 36,
+            display: 'flex', alignItems: 'center',
+          }}>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: '0 16px', flexShrink: 0,
+            }}>
+              <span style={{ fontSize: 14 }}>
+                {announcements[0].type === 'warning' ? '⚠️'
+                  : announcements[0].type === 'success' ? '✅'
+                  : announcements[0].type === 'error'   ? '🚨' : 'ℹ️'}
+              </span>
+            </div>
+            <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
+              <div style={{
+                display: 'inline-flex', gap: 60,
+                animation: 'ticker 20s linear infinite',
+                whiteSpace: 'nowrap',
+              }}>
+                {[...announcements, ...announcements].map((a, i) => (
+                  <span key={i} style={{ fontSize: 12, fontWeight: 600, color: 'var(--accent)' }}>
+                    {a.title} — {a.body}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
         <PageComponent onNavigate={navigateTo} />
       </main>
 
-      {/* ── Mobile Nav — clean, center FAB ── */}
+      {/* ── Mobile Bottom Nav ── */}
       <nav className="mobile-nav">
-        {/* Home */}
         <button className={`mobile-nav-item ${page==='dashboard'?'active':''}`} onClick={() => navigateTo('dashboard')}>
           <div className="mob-icon"><Icons.dashboard /></div>
-          <span className="mobile-nav-label">Home</span>
+          <span className="mobile-nav-label">{t('nav_dashboard')}</span>
         </button>
-
-        {/* Transactions */}
-        <button className={`mobile-nav-item ${page==='transactions'?'active':''}`} onClick={() => navigateTo('transactions')}>
+        <button className={`mobile-nav-item ${['transactions','bulk'].includes(page)?'active':''}`} onClick={() => navigateTo('transactions')}>
           <div className="mob-icon"><Icons.transactions /></div>
-          <span className="mobile-nav-label">Txns</span>
+          <span className="mobile-nav-label">{t('nav_transactions')}</span>
         </button>
-
-        {/* Center FAB — Add Transaction */}
+        {/* Center FAB */}
         <div className="mob-fab-wrap">
-          <button className="mob-fab" onClick={() => navigateTo('transactions')}>＋</button>
-          <span className="mob-fab-label">Add</span>
+          <button className="mob-fab" onClick={() => navigateTo('bulk')}>＋</button>
+          <span className="mob-fab-label">{t('add')}</span>
         </div>
-
-        {/* Budget */}
-        <button className={`mobile-nav-item ${page==='budget'?'active':''}`} onClick={() => navigateTo('budget')}>
+        <button className={`mobile-nav-item ${['budget','savings','debts'].includes(page)?'active':''}`} onClick={() => navigateTo('budget')}>
           <div className="mob-icon"><Icons.budget /></div>
-          <span className="mobile-nav-label">Budget</span>
+          <span className="mobile-nav-label">{t('nav_budget')}</span>
         </button>
-
-        {/* Account/Settings */}
-        <button className={`mobile-nav-item ${page==='settings'?'active':''}`} onClick={() => navigateTo('settings')}>
+        <button className={`mobile-nav-item ${['settings','reports','analytics','vehicles'].includes(page)?'active':''}`} onClick={() => navigateTo('settings')}>
           <div className="mob-icon"><Icons.settings /></div>
-          <span className="mobile-nav-label">Account</span>
+          <span className="mobile-nav-label">{t('nav_settings')}</span>
         </button>
       </nav>
 
