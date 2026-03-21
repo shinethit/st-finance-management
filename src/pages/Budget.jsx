@@ -268,30 +268,31 @@ export default function Budget() {
           {customCats.length===0
             ? <div className="empty-state"><div className="empty-state-icon">◈</div><div className="empty-state-text">No custom categories yet.</div></div>
             : <div className="grid-3">
-                {customCats.map(c=>(
-                  <div key={c.id} className="card" style={{ display:'flex', alignItems:'center', gap:12 }}>
-                    <div style={{ fontSize:24,width:40,height:40,borderRadius:10,background:'var(--bg3)',display:'flex',alignItems:'center',justifyContent:'center' }}>
-                      {c.icon}
+                {customCats.filter(c=>!c.parent_id).map(c=>(
+                  <div key={c.id} className="card" style={{ padding:0, overflow:'hidden' }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 14px' }}>
+                      <div style={{ fontSize:24,width:40,height:40,borderRadius:10,background:'var(--bg3)',display:'flex',alignItems:'center',justifyContent:'center' }}>
+                        {c.icon}
+                      </div>
+                      <div style={{ flex:1 }}>
+                        <div style={{ fontWeight:500 }}>{c.name}</div>
+                        <div className={`badge badge-${c.type}`}>{c.type}</div>
+                      </div>
+                      <div style={{ display:'flex', gap:4 }}>
+                        <button className="btn btn-ghost btn-icon btn-sm" onClick={()=>setCatModal(c)}>✎</button>
+                        <button className="btn btn-ghost btn-icon btn-sm" style={{ color:'var(--red)' }} onClick={()=>delCategory(c.id)}>✕</button>
+                      </div>
                     </div>
-                    <div style={{ flex:1 }}>
-                      <div style={{ fontWeight:500 }}>{c.name}</div>
-                      <div className={`badge badge-${c.type}`}>{c.type}</div>
-                    </div>
-                    <div style={{ display:'flex', gap:4 }}>
-                      <button className="btn btn-ghost btn-icon btn-sm" onClick={()=>setCatModal(c)}>✎</button>
-                      <button className="btn btn-ghost btn-icon btn-sm" style={{ color:'var(--red)' }} onClick={()=>delCategory(c.id)}>✕</button>
-                    </div>
+                    {customCats.filter(s=>s.parent_id===c.id).map(s=>(
+                      <div key={s.id} style={{ display:'flex', alignItems:'center', gap:12, padding:'9px 14px 9px 32px', borderTop:'1px solid var(--border)', background:'var(--bg3)' }}>
+                        <span style={{ fontSize:11, color:'var(--text3)' }}>↳</span>
+                        <div style={{ width:26,height:26,borderRadius:7,background:s.color+'20',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14 }}>{s.icon}</div>
+                        <div style={{ flex:1, fontSize:13, fontWeight:500 }}>{s.name}</div>
+                        <button className="btn btn-ghost btn-icon btn-sm" onClick={()=>setCatModal(s)}>✎</button>
+                        <button className="btn btn-ghost btn-icon btn-sm" style={{ color:'var(--red)' }} onClick={()=>delCategory(s.id)}>✕</button>
+                      </div>
+                    ))}
                   </div>
-                  {/* Sub-categories indented */}
-                  {customCats.filter(s=>s.parent_id===c.id).map(s=>(
-                    <div key={s.id} style={{ display:'flex', alignItems:'center', gap:12, padding:'9px 14px 9px 36px', borderTop:'1px solid var(--border)' }}>
-                      <div style={{ fontSize:11, color:'var(--text3)', marginRight:2 }}>↳</div>
-                      <div style={{ width:28, height:28, borderRadius:8, background:s.color+'20', display:'flex', alignItems:'center', justifyContent:'center', fontSize:15 }}>{s.icon}</div>
-                      <div style={{ flex:1, fontSize:13, fontWeight:500 }}>{s.name}</div>
-                      <button className="btn btn-ghost btn-icon btn-sm" onClick={()=>setCatModal(s)}>✏️</button>
-                      <button className="btn btn-ghost btn-icon btn-sm" style={{ color:'var(--red)' }} onClick={()=>delCategory(s.id)}>✕</button>
-                    </div>
-                  ))}
                 ))}
               </div>
           }
