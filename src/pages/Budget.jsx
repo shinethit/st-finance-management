@@ -1,6 +1,7 @@
 // src/pages/Budget.jsx — v3 (% of income support)
 import { useState } from 'react';
 import { useBudgets, useCategories, useTransactions } from '../hooks/useData';
+import { useLang } from '../lib/LangContext';
 
 const fmt = n => new Intl.NumberFormat('en-US').format(Math.abs(Number(n)||0));
 
@@ -34,12 +35,12 @@ function BudgetModal({ onClose, onSave, categories, monthIncome, initial }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e=>e.stopPropagation()}>
         <div className="modal-header">
-          <div className="modal-title">{initial?.id?t('edit'):'New'} Budget</div>
+          <div className="modal-title">{initial?.id?'Edit':'New'} Budget</div>
           <button className="btn btn-ghost btn-icon" onClick={onClose}>✕</button>
         </div>
         <div className="modal-form">
           <div className="form-group">
-            <label className="form-label">{t('budget_name')}</label>
+            <label className="form-label">Budget Name</label>
             <input className="form-input" placeholder="e.g. Food, Donation" value={form.name}
               onChange={e=>set('name',e.target.value)} autoFocus />
           </div>
@@ -53,7 +54,7 @@ function BudgetModal({ onClose, onSave, categories, monthIncome, initial }) {
 
           {/* Budget type toggle */}
           <div className="form-group">
-            <label className="form-label">{t('budget_type')}</label>
+            <label className="form-label">Budget Type</label>
             <div className="type-toggle">
               <button className={`type-btn expense ${!isPercent?'active':''}`} onClick={()=>set('budget_type','fixed')}>
                 Fixed Amount
@@ -66,13 +67,13 @@ function BudgetModal({ onClose, onSave, categories, monthIncome, initial }) {
 
           {!isPercent ? (
             <div className="form-group">
-              <label className="form-label">{t('amount')}</label>
+              <label className="form-label">Amount</label>
               <input className="form-input" type="number" placeholder="0" value={form.amount}
                 onChange={e=>set('amount',e.target.value)} />
             </div>
           ) : (
             <div className="form-group">
-              <label className="form-label">{t('budget_percent')}</label>
+              <label className="form-label">Percentage of Monthly Income</label>
               <div style={{ position:'relative' }}>
                 <input className="form-input" type="number" step="0.1" min="0" max="100"
                   placeholder="e.g. 5" value={form.percent_of_income}
@@ -94,11 +95,11 @@ function BudgetModal({ onClose, onSave, categories, monthIncome, initial }) {
           )}
 
           <div className="form-group">
-            <label className="form-label">{t('period')}</label>
+            <label className="form-label">Period</label>
             <select className="form-select" value={form.period} onChange={e=>set('period',e.target.value)}>
-              <option value="monthly">{t('monthly')}</option>
-              <option value="weekly">{t('weekly')}</option>
-              <option value="yearly">{t('yearly')}</option>
+              <option value="monthly">Monthly</option>
+              <option value="weekly">Weekly</option>
+              <option value="yearly">Yearly</option>
             </select>
           </div>
           <div className="modal-actions">
@@ -120,20 +121,20 @@ function CategoryModal({ onClose, onSave, initial }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e=>e.stopPropagation()}>
         <div className="modal-header">
-          <div className="modal-title">{initial?.id?t('edit'):'New'} Category</div>
+          <div className="modal-title">{initial?.id?'Edit':'New'} Category</div>
           <button className="btn btn-ghost btn-icon" onClick={onClose}>✕</button>
         </div>
         <div className="modal-form">
           <div className="type-toggle">
-            <button className={`type-btn expense ${form.type==='expense'?'active':''}`} onClick={()=>set('type','expense')}>{t('expense')}</button>
-            <button className={`type-btn income  ${form.type==='income' ?'active':''}`} onClick={()=>set('type','income')}>{t('income')}</button>
+            <button className={`type-btn expense ${form.type==='expense'?'active':''}`} onClick={()=>set('type','expense')}>Expense</button>
+            <button className={`type-btn income  ${form.type==='income' ?'active':''}`} onClick={()=>set('type','income')}>Income</button>
           </div>
           <div className="form-group">
-            <label className="form-label">{t('name')}</label>
+            <label className="form-label">Name</label>
             <input className="form-input" placeholder="e.g. Coffee" value={form.name} onChange={e=>set('name',e.target.value)} autoFocus />
           </div>
           <div className="form-group">
-            <label className="form-label">{t('icon')}</label>
+            <label className="form-label">Icon</label>
             <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
               {ICONS.map(ic=>(
                 <button key={ic} onClick={()=>set('icon',ic)}
@@ -154,7 +155,6 @@ function CategoryModal({ onClose, onSave, initial }) {
 }
 
 export default function Budget() {
-  const { t } = useLang();
   const { data: budgets, monthIncome, save: saveBudget, del: delBudget } = useBudgets();
   const { data: categories, saveCategory, del: delCategory } = useCategories();
   const { data: transactions } = useTransactions();
@@ -182,7 +182,7 @@ export default function Budget() {
     <div className="page">
       <div className="page-header">
         <div>
-          <div className="page-title">{t('budget_categories')}</div>
+          <div className="page-title">Budget & Categories</div>
           <div className="page-subtitle">
             {monthIncome > 0
               ? `This month income: ${fmt(monthIncome)} · Budgeted: ${fmt(totalEffective)} (${totalPercent > 0 ? totalPercent.toFixed(1)+'% allocated' : ''})`
@@ -213,8 +213,8 @@ export default function Budget() {
       )}
 
       <div className="type-toggle" style={{ marginBottom:20, maxWidth:280 }}>
-        <button className={`type-btn expense ${tab==='budgets'?'active':''}`} onClick={()=>setTab('budgets')}>{t('budgets')}</button>
-        <button className={`type-btn income  ${tab==='categories'?'active':''}`} onClick={()=>setTab('categories')}>{t('categories')}</button>
+        <button className={`type-btn expense ${tab==='budgets'?'active':''}`} onClick={()=>setTab('budgets')}>Budgets</button>
+        <button className={`type-btn income  ${tab==='categories'?'active':''}`} onClick={()=>setTab('categories')}>Categories</button>
       </div>
 
       {tab==='budgets' && (
@@ -266,7 +266,7 @@ export default function Budget() {
         <div>
           <div style={{ fontSize:12, color:'var(--text3)', marginBottom:12 }}>Custom categories — your own additions.</div>
           {customCats.length===0
-            ? <div className="empty-state"><div className="empty-state-icon">◈</div><div className="empty-state-text">{t('no_categories')}</div></div>
+            ? <div className="empty-state"><div className="empty-state-icon">◈</div><div className="empty-state-text">No custom categories yet.</div></div>
             : <div className="grid-3">
                 {customCats.map(c=>(
                   <div key={c.id} className="card" style={{ display:'flex', alignItems:'center', gap:12 }}>
@@ -282,6 +282,16 @@ export default function Budget() {
                       <button className="btn btn-ghost btn-icon btn-sm" style={{ color:'var(--red)' }} onClick={()=>delCategory(c.id)}>✕</button>
                     </div>
                   </div>
+                  {/* Sub-categories indented */}
+                  {customCats.filter(s=>s.parent_id===c.id).map(s=>(
+                    <div key={s.id} style={{ display:'flex', alignItems:'center', gap:12, padding:'9px 14px 9px 36px', borderTop:'1px solid var(--border)' }}>
+                      <div style={{ fontSize:11, color:'var(--text3)', marginRight:2 }}>↳</div>
+                      <div style={{ width:28, height:28, borderRadius:8, background:s.color+'20', display:'flex', alignItems:'center', justifyContent:'center', fontSize:15 }}>{s.icon}</div>
+                      <div style={{ flex:1, fontSize:13, fontWeight:500 }}>{s.name}</div>
+                      <button className="btn btn-ghost btn-icon btn-sm" onClick={()=>setCatModal(s)}>✏️</button>
+                      <button className="btn btn-ghost btn-icon btn-sm" style={{ color:'var(--red)' }} onClick={()=>delCategory(s.id)}>✕</button>
+                    </div>
+                  ))}
                 ))}
               </div>
           }
@@ -293,7 +303,7 @@ export default function Budget() {
           categories={categories} monthIncome={monthIncome} initial={budgetModal} />
       )}
       {catModal!==null && (
-        <CategoryModal onClose={()=>setCatModal(null)} onSave={saveCategory} initial={catModal} />
+        <CategoryModal onClose={()=>setCatModal(null)} onSave={saveCategory} initial={catModal} categories={categories} />
       )}
     </div>
   );

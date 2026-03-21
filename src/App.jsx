@@ -12,8 +12,10 @@ import Vehicles from './pages/Vehicles';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import BulkEntry from './pages/BulkEntry';
+import MyAnalytics from './pages/MyAnalytics';
 import Admin from './pages/Admin';
 import './App.css';
+import Logo from './lib/Logo';
 
 // ── SVG Icons ─────────────────────────────────────────────────
 const Icon = ({ d, size=16 }) => (
@@ -34,6 +36,7 @@ const Icons = {
   settings:     () => <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
   search:       () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
   bell:         () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
+  analytics:    () => <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>,
   bulk:         () => <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>,
   logout:       () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
 };
@@ -46,6 +49,7 @@ const NAV = [
   { id:'debts',        labelKey:'nav_debts',        icon:'debts' },
   { id:'vehicles',     labelKey:'nav_vehicles',     icon:'vehicles' },
   { id:'bulk',         labelKey:'nav_bulk',         icon:'bulk' },
+  { id:'analytics',     labelKey:'nav_analytics',     icon:'analytics' },
   { id:'reports',      labelKey:'nav_reports',      icon:'reports' },
   { id:'settings',     labelKey:'nav_settings',     icon:'settings' },
 ];
@@ -53,7 +57,7 @@ const NAV = [
 const PAGES = {
   dashboard:Dashboard, transactions:Transactions, budget:Budget,
   savings:Savings, debts:Debts, vehicles:Vehicles,
-  reports:Reports, settings:Settings, bulk:BulkEntry,
+  reports:Reports, settings:Settings, bulk:BulkEntry, analytics:MyAnalytics,
 };
 
 // ── Search Overlay ─────────────────────────────────────────────
@@ -275,9 +279,33 @@ function AppInner() {
 }
 
 export default function App() {
-  // Simple URL-based routing for admin
+  // Env var check — show helpful message instead of blank screen
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseKey || supabaseUrl.includes('placeholder')) {
+    return (
+      <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center',
+        background:'#0f0f11', color:'#fbbf24', fontFamily:'sans-serif', padding:32, flexDirection:'column', gap:16, textAlign:'center' }}>
+        <div style={{ fontSize:48 }}>✦</div>
+        <div style={{ fontSize:20, fontWeight:700 }}>Shine Thit</div>
+        <div style={{ fontSize:14, color:'#f87171', maxWidth:420, lineHeight:1.7 }}>
+          Supabase environment variables are missing.<br/>
+          Go to <strong>Vercel → Project → Settings → Environment Variables</strong> and add:<br/>
+          <code style={{ display:'block', marginTop:8, padding:'8px 16px', background:'rgba(248,113,113,0.1)', borderRadius:8, fontSize:12 }}>
+            VITE_SUPABASE_URL<br/>VITE_SUPABASE_ANON_KEY
+          </code>
+        </div>
+        <div style={{ fontSize:12, color:'#6b7280' }}>Then redeploy from Vercel dashboard.</div>
+      </div>
+    );
+  }
+
+  // URL-based routing
   if (window.location.pathname === '/admin') {
     return <LangProvider><Admin /></LangProvider>;
+  }
+  if (window.location.pathname === '/reset-password') {
+    return <LangProvider><AuthProvider><Auth /></AuthProvider></LangProvider>;
   }
   return <LangProvider><AuthProvider><AppInner /></AuthProvider></LangProvider>;
 }

@@ -1,6 +1,7 @@
 // src/pages/Admin.jsx — Shine Thit Admin Panel
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import Logo from '../lib/Logo';
 
 const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'shinethit@admin2024';
 const fmt    = n => new Intl.NumberFormat('en-US').format(Math.abs(Number(n)||0));
@@ -91,7 +92,9 @@ function AdminLogin({ onLogin }) {
     <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:'var(--bg)', padding:16 }}>
       <div style={{ width:'100%', maxWidth:380, background:'var(--bg2)', border:'1px solid var(--border2)', borderRadius:20, padding:36, boxShadow:'0 20px 60px rgba(0,0,0,0.4)' }}>
         <div style={{ textAlign:'center', marginBottom:32 }}>
-          <div style={{ fontSize:40, marginBottom:10 }}>🔐</div>
+          <div style={{ display:'flex', justifyContent:'center', marginBottom:8 }}>
+            <Logo size={64} />
+          </div>
           <div style={{ fontSize:22, fontWeight:800, letterSpacing:-.5 }}>Admin Panel</div>
           <div style={{ fontSize:13, color:'var(--text3)', marginTop:5 }}>Shine Thit — Restricted Access</div>
         </div>
@@ -587,7 +590,7 @@ export default function Admin() {
       {/* Sidebar */}
       <div style={{ width:210, background:'var(--bg2)', borderRight:'1px solid var(--border)', display:'flex', flexDirection:'column', padding:'24px 12px', flexShrink:0 }}>
         <div style={{ display:'flex', alignItems:'center', gap:10, padding:'0 8px 24px' }}>
-          <div style={{ width:36, height:36, borderRadius:10, background:'linear-gradient(135deg,var(--accent),var(--accent2))', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18 }}>🔐</div>
+          <Logo size={36} />
           <div>
             <div style={{ fontWeight:800, fontSize:14 }}>Admin Panel</div>
             <div style={{ fontSize:10, color:'var(--text3)', textTransform:'uppercase', letterSpacing:1 }}>Shine Thit</div>

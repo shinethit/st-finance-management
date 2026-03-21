@@ -378,3 +378,72 @@ export function useDashboard() {
   useEffect(() => { load(); }, [load]);
   return { summary, loading, reload: load };
 }
+
+// ── Custom Trackers ────────────────────────────────────────────
+export function useCustomTrackers() {
+  const [data,    setData]    = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const { data: rows } = await supabase
+      .from('custom_trackers')
+      .select('*')
+      .order('created_at', { ascending: false });
+    setData(rows || []);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const save = useCallback(async (item) => {
+    const isNew = !item.id;
+    const payload = { ...item, updated_at: new Date().toISOString() };
+    const { data: row } = isNew
+      ? await supabase.from('custom_trackers').insert(payload).select().single()
+      : await supabase.from('custom_trackers').update(payload).eq('id', item.id).select().single();
+    setData(prev => isNew ? [row, ...prev] : prev.map(r => r.id === row.id ? row : r));
+    return row;
+  }, []);
+
+  const del = useCallback(async (id) => {
+    await supabase.from('custom_trackers').delete().eq('id', id);
+    setData(prev => prev.filter(r => r.id !== id));
+  }, []);
+
+  // Get monthly totals for a tracker (last 6 months)
+  const getTrackerData = useCallback(async (tracker) => {
+    const months = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(1);
+      d.setMonth(d.getMonth() - i);
+      months.push(d.toISOString().slice(0, 7));
+    }
+
+    const results = await Promise.all(months.map(async (m) => {
+      let q = supabase
+        .from('transactions')
+        .select('amount, note, category_id, category:categories(parent_id)')
+        .eq('type', 'expense')
+        .gte('date', m + '-01')
+        .lte('date', m + '-31');
+
+      if (tracker.filter_type === 'note_contains') {
+        q = q.ilike('note', `%${tracker.filter_value}%`);
+      } else if (tracker.filter_type === 'category') {
+        q = q.eq('category_id', tracker.filter_value);
+      } else if (tracker.filter_type === 'subcategory') {
+        q = q.eq('category_id', tracker.filter_value);
+      }
+
+      const { data: rows } = await q;
+      const total = (rows || []).reduce((s, r) => s + Number(r.amount), 0);
+      return { month: m, total };
+    }));
+
+    return results;
+  }, []);
+
+  return { data, loading, save, del, reload: load, getTrackerData };
+}

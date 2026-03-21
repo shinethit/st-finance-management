@@ -1,6 +1,7 @@
 // src/pages/Auth.jsx — Login + Register + Forgot Password + Reset Password
 import { useState } from 'react';
 import { useAuth } from '../lib/AuthContext';
+import Logo from '../lib/Logo';
 import { useLang } from '../lib/LangContext';
 
 export default function Auth() {
@@ -38,8 +39,10 @@ export default function Auth() {
       <div style={{ minHeight:'100vh', background:'var(--bg)', display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}>
         <div style={{ width:'100%', maxWidth:400, background:'var(--bg2)', border:'1px solid var(--border)', borderRadius:20, padding:36 }}>
           <div style={{ textAlign:'center', marginBottom:32 }}>
-            <div style={{ fontSize:36, marginBottom:8 }}>🔑</div>
-            <div style={{ fontSize:22, fontWeight:600, letterSpacing:'-0.5px' }}>Set New Password</div>
+            <div style={{ display:'flex', justifyContent:'center', marginBottom:8 }}>
+              <Logo size={56} />
+            </div>
+            <div style={{ fontSize:22, fontWeight:600, letterSpacing:'-0.5px' }}>{t('set_new_password')}</div>
             <div style={{ fontSize:13, color:'var(--text3)', marginTop:4 }}>Shine Thit</div>
           </div>
           <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
@@ -102,7 +105,9 @@ export default function Auth() {
       <div style={{ width:'100%', maxWidth:400, background:'var(--bg2)', border:'1px solid var(--border)', borderRadius:20, padding:36 }}>
 
         <div style={{ textAlign:'center', marginBottom:32 }}>
-          <div style={{ fontSize:36, marginBottom:8 }}>✦</div>
+          <div style={{ display:'flex', justifyContent:'center', marginBottom:8 }}>
+            <Logo size={72} />
+          </div>
           <div style={{ fontSize:22, fontWeight:600, letterSpacing:'-0.5px' }}>Shine Thit</div>
           <div style={{ fontSize:13, color:'var(--text3)', marginTop:4 }}>Personal Finance Management</div>
         </div>

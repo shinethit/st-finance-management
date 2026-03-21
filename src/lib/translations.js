@@ -12,6 +12,7 @@ const t = {
     nav_reports:      'Reports',
     nav_settings:     'Settings',
     nav_bulk:         'Bulk Entry',
+    nav_analytics:    'My Analytics',
 
     // ── Common ───────────────────────────────────────────────
     save:         'Save',
@@ -200,6 +201,7 @@ const t = {
     nav_reports:      'အစီရင်ခံစာ',
     nav_settings:     'ဆက်တင်',
     nav_bulk:         'အသုတ်ထည့်',
+    nav_analytics:    'ကိုယ်ပိုင်ခွဲခြမ်း',
 
     save:         'သိမ်းမည်',
     cancel:       'မလုပ်တော့',
@@ -378,6 +380,7 @@ const t = {
     nav_reports:      '报告',
     nav_settings:     '设置',
     nav_bulk:         '批量录入',
+    nav_analytics:    '我的分析',
 
     save:         '保存',
     cancel:       '取消',
@@ -556,6 +559,7 @@ const t = {
     nav_reports:      'รายงาน',
     nav_settings:     'การตั้งค่า',
     nav_bulk:         'บันทึกหลายรายการ',
+    nav_analytics:    'การวิเคราะห์ของฉัน',
 
     save:         'บันทึก',
     cancel:       'ยกเลิก',

@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useAuth } from '../lib/AuthContext';
 import { useLang, LANGUAGES } from '../lib/LangContext';
+import Logo from '../lib/Logo';
 import { supabase } from '../lib/supabase';
 
 export default function Settings() {
@@ -103,9 +104,13 @@ export default function Settings() {
       </Section>
 
       <Section title={t('about')}>
-        <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.8 }}>
-          <div>Shine Thit v3 — {t('app_tagline')}</div>
-          <div style={{ color: 'var(--text3)', marginTop: 4 }}>Supabase · React · Vercel · Free</div>
+        <div style={{ display:'flex', alignItems:'center', gap:16 }}>
+          <Logo size={56} />
+          <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.8 }}>
+            <div style={{ fontWeight:700, fontSize:15 }}>Shine Thit v3</div>
+            <div>{t('app_tagline')}</div>
+            <div style={{ color: 'var(--text3)', marginTop: 4 }}>Supabase · React · Vercel · Free</div>
+          </div>
         </div>
       </Section>
     </div>
