@@ -1,4 +1,5 @@
 // src/pages/Debts.jsx — v3 fixed labels: I Lent / I Borrowed
+import { useLang } from '../lib/LangContext';
 import { useState } from 'react';
 import { useDebts } from '../hooks/useData';
 

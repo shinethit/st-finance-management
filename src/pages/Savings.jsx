@@ -1,4 +1,5 @@
 // src/pages/Savings.jsx — Supabase version
+import { useLang } from '../lib/LangContext';
 import { useState } from 'react';
 import { useSavings } from '../hooks/useData';
 

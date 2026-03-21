@@ -785,6 +785,30 @@ body {
   .wallet-card { min-width:150px; }
 }
 
+
+  /* ── iOS keyboard fixes ── */
+  /* Prevent zoom on input focus (iOS zooms when font-size < 16px) */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+  /* After keyboard closes, scroll position sometimes breaks — fix */
+  .main-content {
+    height: 100%;
+  }
+
+  /* ── Prevent buttons being cut off at bottom ── */
+  .modal-form {
+    padding-bottom: max(env(safe-area-inset-bottom), 16px) !important;
+  }
+  .modal-actions {
+    margin-top: 20px;
+    padding-bottom: 4px;
+  }
+  /* Fix form labels shrinking too small */
+  .form-label {
+    font-size: 13px !important;
+  }
+
 @media (max-width: 420px) {
   .grid-3 { grid-template-columns:1fr; }
   .stat-value { font-size:18px; }
