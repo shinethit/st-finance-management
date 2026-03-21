@@ -14,6 +14,7 @@ import Settings from './pages/Settings';
 import BulkEntry from './pages/BulkEntry';
 import MyAnalytics from './pages/MyAnalytics';
 import Categories from './pages/Categories';
+import InfoHub, { AboutPage, PrivacyPage, TermsPage, GuidePage } from './pages/InfoPages';
 import Admin from './pages/Admin';
 import { supabase } from './lib/supabase';
 import './App.css';
@@ -61,6 +62,7 @@ const PAGES = {
   dashboard:Dashboard, transactions:Transactions, budget:Budget,
   savings:Savings, debts:Debts, vehicles:Vehicles,
   reports:Reports, settings:Settings, bulk:BulkEntry, analytics:MyAnalytics, categories:Categories,
+  info:InfoHub, about:AboutPage, privacy:PrivacyPage, terms:TermsPage, guide:GuidePage,
 };
 
 // ── Search Overlay ─────────────────────────────────────────────
@@ -219,7 +221,10 @@ function AppInner() {
   const navigateTo = (id) => {
     setPage(id);
     setNotif(false);
+    setMoreOpen(false);
   };
+  // Expose for Settings page links
+  window._shinethit_navigate = navigateTo;
 
   return (
     <div className="app">
@@ -390,6 +395,7 @@ function AppInner() {
               { id:'vehicles',  icon:'🚗', label:t('nav_vehicles') },
               { id:'analytics', icon:'📈', label:t('nav_analytics') },
               { id:'categories',icon:'📂', label:'Categories' },
+              { id:'info',       icon:'ℹ️', label:'Info & Guide' },
               { id:'bulk',      icon:'📋', label:t('nav_bulk') },
             ].map(item=>(
               <button key={item.id}
