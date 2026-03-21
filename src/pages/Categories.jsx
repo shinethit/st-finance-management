@@ -143,11 +143,12 @@ export default function Categories() {
 
   // Only user-created categories (is_custom) + only current type
   const custom = categories.filter(c => c.is_custom);
-  const parentOpts = custom.filter(c => !c.parent_id);
+  // All top-level cats (both default & custom) can be parents
+  const parentOpts = categories.filter(c => !c.parent_id);
 
   // Group: parents of current type + their subs
   const parents = categories.filter(c => c.type === filter && !c.parent_id);
-  const subs    = (p) => custom.filter(c => c.parent_id === p.id);
+  const subs    = (p) => categories.filter(c => c.parent_id === p.id);
 
   return (
     <div className="page">
