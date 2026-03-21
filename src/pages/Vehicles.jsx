@@ -8,7 +8,7 @@ const today = () => new Date().toISOString().slice(0, 10);
 
 const FUEL_TYPES     = ['Gasoline','Diesel','Electric','Hybrid','CNG'];
 const VEHICLE_TYPES  = ['Car','Motorcycle','Truck','Van','Bus','Other'];
-const EXP_TYPES      = [t('fuel'),'Service','Wash','Tyre','Insurance','Tax','Fine','Parking','Other'];
+const EXP_TYPES      = ['Fuel','Service','Wash','Tyre','Insurance','Tax','Fine','Parking','Other'];
 const REMINDER_TYPES = ['Oil Change','Tyre Rotation','Brake Check','Insurance','Road Tax','Registration','Service','Other'];
 const TYPE_ICONS     = { Car:'🚗', Motorcycle:'🏍️', Truck:'🚛', Van:'🚐', Bus:'🚌', Other:'🚙' };
 const EXP_ICONS      = { Fuel:'⛽', Service:'🔧', Wash:'💧', Tyre:'🔘', Insurance:'🛡️', Tax:'📋', Fine:'⚠️', Parking:'🅿️', Other:'📦' };
@@ -92,13 +92,13 @@ function VehicleModal({ onClose, onSave, initial }) {
 function ExpenseModal({ vehicleId, onClose, onSave, initial }) {
   const { t } = useLang();
   const [form, setForm] = useState({
-    vehicle_id: vehicleId, type: t('fuel'),
+    vehicle_id: vehicleId, type: 'Fuel',
     amount: '', odometer: '', liters: '',
     price_per_liter: '', station: '', note: '', date: today(),
     ...initial,
   });
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
-  const isFuel = form.type === t('fuel');
+  const isFuel = form.type === 'Fuel';
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -232,7 +232,7 @@ function VehicleDetail({ vehicle, onBack, onEdit }) {
   const [remModal, setRemModal]   = useState(null);
 
   const totalExpenses = expenses.reduce((s, e) => s + Number(e.amount), 0);
-  const fuelEntries   = expenses.filter(e => e.type === t('fuel'));
+  const fuelEntries   = expenses.filter(e => e.type === 'Fuel');
   const totalLiters   = fuelEntries.reduce((s, e) => s + Number(e.liters || 0), 0);
   const now           = new Date();
   const overdueCount  = reminders.filter(r => r.due_date && new Date(r.due_date) < now).length;
