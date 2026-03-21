@@ -1,57 +1,51 @@
-# Shine Thit — Personal Finance Management v3
+// src/lib/supabase.js
+import { createClient } from '@supabase/supabase-js';
 
-React + Supabase + Vercel · Multi-user · Free
+const SUPABASE_URL     = import.meta.env.VITE_SUPABASE_URL     || '';
+const SUPABASE_ANON_KEY= import.meta.env.VITE_SUPABASE_ANON_KEY|| '';
 
----
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  console.warn('[Shine Thit] Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY');
+}
 
-## v3 တွင် ပါဝင်တာ
+export const supabase = SUPABASE_URL && SUPABASE_ANON_KEY
+  ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  : createClient('https://placeholder.supabase.co', 'placeholder-key');
 
-**1. Unified Transactions** — Vehicle expenses တွေ `transactions` table ထဲသာ သိမ်း (`sub_type='vehicle'`)။ Double entry မဖြစ်တော့ဘူး။
+// ── Auth helpers ──────────────────────────────────────────────
+export const auth = {
+  signUp: (email, password, name) =>
+    supabase.auth.signUp({ email, password, options: { data: { full_name: name } } }),
 
-**2. Debt Auto-Transaction** — Debt ဖန်တီးတဲ့အခါ transaction auto-create ဖြစ်တယ်။ Payment လုပ်တဲ့အခါလည်း transaction auto-create ဖြစ်တယ်။
+  signIn: (email, password) =>
+    supabase.auth.signInWithPassword({ email, password }),
 
-**3. Budget % of Income** — Budget ကို Fixed Amount ဒါမှမဟုတ် Income ရဲ့ % နဲ့ သတ်မှတ်နိုင်တယ်။ ဥပမာ Food = 30%, Donation = 3%။
+  signOut: () => supabase.auth.signOut(),
 
-**4. App Name** — Shine Thit Personal Finance Management
+  resetPassword: (email) =>
+    supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    }),
 
----
+  updatePassword: (newPassword) =>
+    supabase.auth.updateUser({ password: newPassword }),
 
-## Quick Start
+  getUser:     () => supabase.auth.getUser(),
+  onAuthChange:(cb) => supabase.auth.onAuthStateChange(cb),
+};
 
-```bash
-cp .env.example .env.local
-# .env.local မှာ Supabase URL + anon key ထည့်
-npm install
-npm run dev
-```
-
----
-
-## Supabase Setup
-
-### Fresh project (ပထမဆုံး)
-```
-SQL Editor → schema.sql paste → Run
-```
-
-### Existing v2 project (migrate လုပ်ချင်ရင်)
-```
-SQL Editor → migrate_v2_to_v3.sql paste → Run
-```
-Data တွေ ကျန်ခဲ့မယ်၊ vehicle expenses တွေ transactions ထဲ migrate ဖြစ်သွားမယ်။
-
----
-
-## GitHub + Vercel Deploy
-
-```bash
-git init && git add . && git commit -m "shine thit v3"
-git remote add origin https://github.com/you/shine-thit.git
-git push -u origin main
-```
-
-Vercel: New Project → Import → env vars ထည့် → Deploy
-```
-VITE_SUPABASE_URL=https://xxx.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJ...
-```
+// ── Generic DB helpers ────────────────────────────────────────
+export const db = {
+  getAll: (table, query = {}) => {
+    let q = supabase.from(table).select(query.select || '*');
+    if (query.eq)    Object.entries(query.eq).forEach(([k,v]) => { q = q.eq(k, v); });
+    if (query.order) q = q.order(query.order, { ascending: query.asc ?? false });
+    if (query.limit) q = q.limit(query.limit);
+    return q;
+  },
+  insert:       (table, data)     => supabase.from(table).insert(data).select().single(),
+  upsert:       (table, data)     => supabase.from(table).upsert(data).select().single(),
+  update:       (table, id, data) => supabase.from(table).update({ ...data, updated_at: new Date().toISOString() }).eq('id', id).select().single(),
+  delete:       (table, id)       => supabase.from(table).delete().eq('id', id),
+  getCategories:()                => supabase.from('categories').select('*').order('name'),
+};
