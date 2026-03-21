@@ -102,6 +102,73 @@ function WalletModal({ onClose, onSave, initial = {} }) {
   );
 }
 
+
+// ── Adjust Balance Modal ──────────────────────────────────────
+function AdjustModal({ wallet, onClose, onSave }) {
+  const { t } = useLang();
+  const [newBalance, setNewBalance] = useState(String(wallet.balance || 0));
+  const [saving, setSaving]         = useState(false);
+  const diff = Number(newBalance) - Number(wallet.balance || 0);
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <div className="modal-title">
+            <span style={{ marginRight:8 }}>{wallet.icon}</span>
+            Adjust Balance
+          </div>
+          <button className="btn btn-ghost btn-icon" onClick={onClose}>✕</button>
+        </div>
+        <div className="modal-form">
+          <div style={{ textAlign:'center', padding:'12px 0 20px' }}>
+            <div style={{ fontSize:12, color:'var(--text3)', marginBottom:4 }}>Current Balance</div>
+            <div style={{ fontSize:28, fontWeight:800, fontFamily:'var(--mono)' }}>
+              {wallet.currency} {Number(wallet.balance||0).toLocaleString()}
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">New Balance</label>
+            <input className="form-input" type="number"
+              value={newBalance}
+              onChange={e => setNewBalance(e.target.value)}
+              autoFocus
+              style={{ fontSize:22, fontWeight:700, textAlign:'center' }} />
+          </div>
+
+          {newBalance !== '' && diff !== 0 && (
+            <div style={{
+              padding:'10px 14px', borderRadius:10, textAlign:'center',
+              background: diff > 0 ? 'rgba(52,211,153,0.1)' : 'rgba(251,113,133,0.1)',
+              color: diff > 0 ? 'var(--green)' : 'var(--red)',
+              fontSize:14, fontWeight:600,
+            }}>
+              {diff > 0 ? '+' : ''}{wallet.currency} {diff.toLocaleString()}
+              <span style={{ fontSize:12, fontWeight:400, color:'var(--text3)', marginLeft:8 }}>
+                adjustment
+              </span>
+            </div>
+          )}
+
+          <div className="modal-actions">
+            <button className="btn btn-secondary" onClick={onClose}>{t('cancel')}</button>
+            <button className="btn btn-primary" disabled={saving}
+              onClick={async () => {
+                if (newBalance === '') return;
+                setSaving(true);
+                await onSave({ ...wallet, balance: Number(newBalance) });
+                onClose();
+              }}>
+              {saving ? 'Saving…' : 'Update Balance'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Settings() {
   const { user, profile, refreshProfile, signOut } = useAuth();
   const { t, lang, setLang } = useLang();
@@ -111,7 +178,8 @@ export default function Settings() {
   const [currency, setCurrency] = useState(profile?.currency || 'MMK');
   const [saving,   setSaving]   = useState(false);
   const [saved,    setSaved]    = useState(false);
-  const [walletModal, setWalletModal] = useState(null);
+  const [walletModal,  setWalletModal]  = useState(null);
+  const [adjustModal,  setAdjustModal]  = useState(null);
 
   const handleSave = async () => {
     setSaving(true);
@@ -190,6 +258,9 @@ export default function Settings() {
                   </div>
                 </div>
                 <div style={{ display:'flex', gap:4 }}>
+                  <button className="btn btn-ghost btn-sm"
+                    style={{ fontSize:11, color:'var(--accent)' }}
+                    onClick={() => setAdjustModal(w)}>± Adjust</button>
                   <button className="btn btn-ghost btn-icon btn-sm"
                     onClick={() => setWalletModal(w)}>✎</button>
                   <button className="btn btn-ghost btn-icon btn-sm"
@@ -251,6 +322,13 @@ export default function Settings() {
         </div>
       </Section>
 
+      {adjustModal !== null && (
+        <AdjustModal
+          wallet={adjustModal}
+          onClose={() => setAdjustModal(null)}
+          onSave={saveWallet}
+        />
+      )}
       {walletModal !== null && (
         <WalletModal
           onClose={() => setWalletModal(null)}
