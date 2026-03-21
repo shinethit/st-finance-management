@@ -131,8 +131,25 @@ body {
 .app {
   display: grid;
   grid-template-columns: var(--sidebar-w) 1fr;
+  grid-template-rows: 1fr;
   height: 100vh;
   overflow: hidden;
+}
+
+/* Desktop: sidebar spans full height, rest is flex column */
+.app > .sidebar {
+  grid-row: 1;
+  grid-column: 1;
+  overflow-y: auto;
+}
+
+/* Desktop: top-header, main-content, mobile-nav in column 2 */
+.app > .top-header {
+  /* on desktop, top-header spans column 2 naturally */
+  /* Use CSS to make it sticky within the grid */
+  position: sticky;
+  top: 0;
+  z-index: 20;
 }
 
 /* ── SIDEBAR ────────────────────────────────── */
@@ -225,7 +242,24 @@ body {
 .sidebar-footer { padding-top: 16px; border-top: 1px solid var(--border); }
 
 /* ── MAIN ───────────────────────────────────── */
-.main-content { overflow-y: auto; display: flex; flex-direction: column; }
+.main-content { overflow-y: auto; flex: 1; min-height: 0; }
+
+/* Desktop: col 2 = flex column containing top-header + main-content */
+/* We wrap with CSS grid sub-layout trick */
+.app > .top-header,
+.app > .main-content,
+.app > .mobile-nav {
+  grid-column: 2;
+}
+.app {
+  /* Override to use auto rows for column 2 items */
+  grid-template-rows: auto 1fr auto;
+  grid-template-columns: var(--sidebar-w) 1fr;
+}
+.app > .sidebar { grid-row: 1 / -1; }
+.app > .top-header { grid-row: 1; }
+.app > .main-content { grid-row: 2; overflow-y: auto; }
+.app > .mobile-nav { grid-row: 3; display: none; }
 .mobile-nav { display: none; }
 
 /* ── TOP HEADER ─────────────────────────────── */
@@ -614,229 +648,145 @@ body {
 /* ── MOBILE NAV ─────────────────────────────── */
 @media (max-width: 768px) {
 
-  /* ── Core shell: fixed header + fixed bottom nav + scroll middle ── */
-  html, body {
+  html, body, #root {
     height: 100%;
-    overflow: hidden;        /* prevent body scroll */
-    overscroll-behavior: none;
-  }
-
-  .app {
-    display: flex;
-    flex-direction: column;
-    height: 100dvh;          /* dynamic viewport height (handles iOS toolbar) */
+    height: 100dvh;
     overflow: hidden;
-    grid-template-columns: unset;
+    overscroll-behavior: none;
+    -webkit-text-size-adjust: 100%;
   }
 
-  /* ── Sidebar: hide completely on mobile ── */
+  /* ── App shell: flex column — header, content, nav ── */
+  .app {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100dvh;
+    height: -webkit-fill-available;
+    overflow: hidden;
+    grid-template-columns: unset !important;
+  }
+
   .sidebar { display: none !important; }
 
-  /* ── Fixed top header ── */
+  /* ── 1. Fixed-height header — never moves ── */
   .top-header {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    height: 56px;
+    flex: 0 0 auto !important;     /* don't grow or shrink */
+    position: relative !important; /* NOT fixed — part of flex flow */
+    height: auto;
+    min-height: 56px;
     padding: 0 16px;
+    padding-top: env(safe-area-inset-top);
     display: flex;
     align-items: center;
     justify-content: space-between;
     background: var(--bg2);
     border-bottom: 1px solid var(--border);
-    z-index: 100;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    /* iOS safe area */
-    padding-top: env(safe-area-inset-top);
-    height: calc(56px + env(safe-area-inset-top));
+    z-index: 10;
+    width: 100%;
+    box-sizing: border-box;
   }
+  [data-theme="light"] .top-header { background: rgba(255,255,255,0.97); }
 
-  /* ── Scrollable content area ── */
+  /* ── 2. Scrollable content — fills remaining space ── */
   .main-content {
-    position: fixed;
-    top: calc(56px + env(safe-area-inset-top));
-    bottom: calc(var(--nav-h) + env(safe-area-inset-bottom));
-    left: 0; right: 0;
-    overflow-y: auto;
+    flex: 1 1 auto !important;     /* take all remaining space */
+    overflow-y: auto !important;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
-    padding-top: 0;   /* content starts exactly at header bottom */
+    min-height: 0;                 /* critical for flex child scroll */
+    background: var(--bg);
   }
 
-  /* ── Fixed bottom navigation ── */
+  /* ── 3. Fixed-height bottom nav — never moves ── */
   .mobile-nav {
-    display: flex;
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    height: calc(var(--nav-h) + env(safe-area-inset-bottom));
+    display: flex !important;
+    flex: 0 0 auto !important;     /* don't grow or shrink */
+    position: relative !important; /* part of flex flow */
+    height: auto;
+    min-height: 60px;
     padding-bottom: env(safe-area-inset-bottom);
+    padding-bottom: max(env(safe-area-inset-bottom), 8px);
     background: var(--bg2);
     border-top: 1px solid var(--border);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
     align-items: center;
-    z-index: 100;
-    padding-left: 4px;
-    padding-right: 4px;
+    width: 100%;
+    box-sizing: border-box;
+    z-index: 10;
   }
+  [data-theme="light"] .mobile-nav { background: rgba(255,255,255,0.97); }
 
-  [data-theme="light"] .top-header  { background: rgba(255,255,255,0.97); }
-  [data-theme="light"] .mobile-nav  { background: rgba(255,255,255,0.97); }
-
-  /* ── Bottom nav items ── */
+  /* ── Nav items ── */
   .mobile-nav-item {
     flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 3px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-family: var(--font);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 3px; padding: 6px 2px;
+    background: none; border: none;
+    cursor: pointer; font-family: var(--font);
     color: var(--text3);
-    padding: 6px 2px;
-    border-radius: 12px;
-    transition: color 0.15s;
-    min-height: 52px;
     -webkit-tap-highlight-color: transparent;
+    min-height: 48px;
   }
-
   .mobile-nav-item.active { color: var(--accent); }
-
   .mob-icon {
-    width: 32px; height: 32px;
-    border-radius: 10px;
-    background: transparent;
+    width: 30px; height: 30px; border-radius: 9px;
     display: flex; align-items: center; justify-content: center;
-    transition: all 0.2s;
+    background: transparent; transition: background .15s;
   }
+  .mobile-nav-item.active .mob-icon { background: rgba(255,107,53,0.15); }
+  .mobile-nav-item.active .mob-icon svg { stroke: var(--accent); }
+  .mobile-nav-label { font-size: 9px; font-weight: 600; letter-spacing: .2px; }
 
-  .mobile-nav-item.active .mob-icon {
-    background: rgba(255, 107, 53, 0.15);
-  }
-
-  .mobile-nav-item.active .mob-icon svg {
-    stroke: var(--accent);
-  }
-
-  .mobile-nav-label {
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.2px;
-    line-height: 1;
-  }
-
-  /* ── FAB (center add button) ── */
-  .mob-fab-wrap {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 3px;
-  }
-
+  /* ── FAB ── */
+  .mob-fab-wrap { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; }
   .mob-fab {
-    width: 46px; height: 46px;
-    border-radius: 14px;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    display: flex; align-items: center; justify-content: center;
-    font-size: 24px; color: #fff; font-weight: 300;
-    border: none; cursor: pointer;
-    box-shadow: 0 4px 16px rgba(255,107,53,0.45);
-    transition: transform 0.15s, box-shadow 0.15s;
-    font-family: var(--font);
-    -webkit-tap-highlight-color: transparent;
-    transform: translateY(-4px);
+    width:44px; height:44px; border-radius:13px;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    display:flex; align-items:center; justify-content:center;
+    font-size:22px; color:#fff; border:none; cursor:pointer;
+    box-shadow:0 4px 14px rgba(255,107,53,0.4);
+    transform:translateY(-4px);
+    -webkit-tap-highlight-color:transparent;
+    transition:transform .15s;
   }
-
-  .mob-fab:active {
-    transform: translateY(-2px) scale(0.94);
-    box-shadow: 0 2px 8px rgba(255,107,53,0.3);
-  }
-
-  .mob-fab-label {
-    font-size: 10px; font-weight: 600;
-    color: var(--text3);
-    margin-top: -2px;
-  }
+  .mob-fab:active { transform:translateY(-2px) scale(0.94); }
+  .mob-fab-label { font-size:9px; font-weight:600; color:var(--text3); margin-top:-2px; }
 
   /* ── Page content ── */
-  .page {
-    padding: 16px 14px 24px;
-    max-width: 100%;
-    padding-top: 16px;   /* extra clearance handled by main-content top offset */
-  }
+  .page { padding:14px 14px 20px; max-width:100%; }
+  .page-header { margin-bottom:14px; }
+  .page-title  { font-size:20px; }
+  .page-subtitle { font-size:12px; }
+  .top-header-title { font-size:15px; font-weight:700; }
+  .top-header-sub   { display:none; }
+  .hdr-btn { width:32px; height:32px; }
 
-  /* First child spacing inside scrollable area */
-  .main-content > * {
-    /* nothing needed — offset handled by fixed positioning */
-  }
+  /* ── Cards + Grids ── */
+  .card { padding:14px; border-radius:14px; }
+  .grid-4 { grid-template-columns:repeat(2,1fr); gap:10px; }
+  .grid-3 { grid-template-columns:repeat(2,1fr); gap:10px; }
+  .grid-2 { grid-template-columns:1fr; gap:10px; }
+  .stat-value { font-size:20px; }
+  .stat-card  { padding:12px; }
 
-  .page-header {
-    margin-bottom: 16px;
-  }
-
-  .page-title  { font-size: 20px; }
-  .page-subtitle { font-size: 12px; }
-
-  /* ── Header typography ── */
-  .top-header-title { font-size: 16px; font-weight: 700; }
-  .top-header-sub   { display: none; }   /* hide date on small screens */
-  .hdr-btn { width: 34px; height: 34px; }
-
-  /* ── Cards ── */
-  .card { padding: 14px; border-radius: 14px; }
-  .card-title { font-size: 13px; }
-
-  /* ── Grid layouts ── */
-  .grid-4 { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  .grid-3 { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  .grid-2 { grid-template-columns: 1fr; gap: 10px; }
-
-  /* ── Stat cards ── */
-  .stat-value { font-size: 22px; }
-  .stat-card  { padding: 14px; }
-
-  /* ── Modals ── */
-  .modal-overlay {
-    align-items: flex-end;     /* slide up from bottom */
-    padding: 0;
-  }
-
+  /* ── Modals — bottom sheet ── */
+  .modal-overlay { align-items:flex-end; padding:0; }
   .modal {
-    border-radius: 20px 20px 0 0;
-    max-height: 92dvh;
-    width: 100%;
-    max-width: 100%;
-    overflow-y: auto;
-    padding-bottom: calc(env(safe-area-inset-bottom) + 16px);
+    border-radius:20px 20px 0 0;
+    max-height:90dvh; width:100%; max-width:100%;
+    overflow-y:auto;
+    padding-bottom:calc(env(safe-area-inset-bottom) + 12px);
   }
 
-  /* ── Transaction list ── */
-  .tx-item { padding: 12px 14px; }
-  .tx-amount { font-size: 14px; }
-
-  /* ── Balance ── */
-  .balance-amount { font-size: 30px; }
-
-  /* ── Wallet cards ── */
-  .wallet-card { min-width: 160px; }
+  /* ── Misc ── */
+  .tx-item { padding:11px 14px; }
+  .balance-amount { font-size:28px; }
+  .wallet-card { min-width:150px; }
 }
 
 @media (max-width: 420px) {
-  .grid-3 { grid-template-columns: 1fr; }
-  .stat-value { font-size: 20px; }
-  .page { padding: 12px 12px 20px; }
-  .top-header { padding: 0 12px; }
-  .mobile-nav-label { font-size: 9px; }
-}
-
-/* ── Announcement Ticker ── */
-@keyframes ticker {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+  .grid-3 { grid-template-columns:1fr; }
+  .stat-value { font-size:18px; }
+  .page { padding:12px 12px 16px; }
 }

@@ -134,8 +134,18 @@ export default function Dashboard({ onNavigate }) {
     'linear-gradient(135deg,#0891b2,#2dd4bf)',   // teal
   ];
 
+  const monthName = now.toLocaleDateString('en-US',{month:'long',year:'numeric'});
+
   return (
     <div className="page">
+
+      {/* ── Page header ── */}
+      <div className="page-header" style={{ marginBottom:8 }}>
+        <div>
+          <div className="page-title">{t('nav_dashboard')}</div>
+          <div className="page-subtitle">{monthName}</div>
+        </div>
+      </div>
 
       {/* ── Balance Display ── */}
       <div style={{ textAlign:'center', paddingBottom:24, paddingTop:8 }}>

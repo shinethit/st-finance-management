@@ -113,41 +113,113 @@ function BudgetModal({ onClose, onSave, categories, monthIncome, initial }) {
   );
 }
 
-function CategoryModal({ onClose, onSave, initial }) {
-  const [form, setForm] = useState({ name:'', icon:'📦', color:'#7c6aff', type:'expense', ...initial });
+function CategoryModal({ onClose, onSave, initial, allCategories }) {
+  const { t } = useLang();
+  const [form, setForm] = useState({
+    name:'', icon:'📦', color:'#7c6aff', type:'expense',
+    parent_id: null, is_custom: true,
+    ...initial,
+  });
   const set = (k,v) => setForm(p=>({...p,[k]:v}));
-  const ICONS = ['🍜','🚗','🛍️','💊','💡','🎮','📚','✈️','🏠','💅','🐶','🎵','⚽','🎂','💐','🔧','🎓','💻','📦','🤲'];
+
+  const ICONS   = ['🍜','🚗','🛍️','💊','💡','🎮','📚','✈️','🏠','💅','🐶','🎵','⚽','🎂','💐','🔧','🎓','💻','📦','🤲','⚡','💧','📱','🏥','🎯','🧴','👔','🍕','☕','🎁'];
+  const COLORS  = ['#7c6aff','#ff6b35','#3b82f6','#10b981','#f59e0b','#ec4899','#06b6d4','#8b5cf6','#ef4444','#14b8a6','#f97316','#84cc16'];
+
+  // Parent categories (same type, no parent themselves, not the current item)
+  const parentOpts = (allCategories||[]).filter(c =>
+    c.type === form.type && !c.parent_id && c.id !== form.id
+  );
 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e=>e.stopPropagation()}>
         <div className="modal-header">
-          <div className="modal-title">{initial?.id?'Edit':'New'} Category</div>
+          <div className="modal-title">{initial?.id ? t('edit') : t('add')} Category</div>
           <button className="btn btn-ghost btn-icon" onClick={onClose}>✕</button>
         </div>
         <div className="modal-form">
+
+          {/* Type */}
           <div className="type-toggle">
-            <button className={`type-btn expense ${form.type==='expense'?'active':''}`} onClick={()=>set('type','expense')}>Expense</button>
-            <button className={`type-btn income  ${form.type==='income' ?'active':''}`} onClick={()=>set('type','income')}>Income</button>
+            <button className={`type-btn expense ${form.type==='expense'?'active':''}`}
+              onClick={()=>set('type','expense')}>{t('expense')}</button>
+            <button className={`type-btn income  ${form.type==='income'?'active':''}`}
+              onClick={()=>set('type','income')}>{t('income')}</button>
           </div>
+
+          {/* Parent category (Sub-category of) */}
           <div className="form-group">
-            <label className="form-label">Name</label>
-            <input className="form-input" placeholder="e.g. Coffee" value={form.name} onChange={e=>set('name',e.target.value)} autoFocus />
+            <label className="form-label">
+              Sub-category of
+              <span style={{ fontSize:11, color:'var(--text3)', fontWeight:400, marginLeft:8 }}>
+                (ဘာမှ မရွေးရင် top-level category ဖြစ်မယ်)
+              </span>
+            </label>
+            <select className="form-select" value={form.parent_id||''}
+              onChange={e => set('parent_id', e.target.value||null)}>
+              <option value="">— Top-level category —</option>
+              {parentOpts.map(p=>(
+                <option key={p.id} value={p.id}>{p.icon} {p.name}</option>
+              ))}
+            </select>
           </div>
+
+          {/* Name */}
           <div className="form-group">
-            <label className="form-label">Icon</label>
-            <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+            <label className="form-label">{t('name')}</label>
+            <input className="form-input" placeholder="ဥပမာ — မီတာ, ဆေး, Internet"
+              value={form.name} onChange={e=>set('name',e.target.value)} autoFocus />
+          </div>
+
+          {/* Icon + Color */}
+          <div className="form-group">
+            <label className="form-label">{t('icon')}</label>
+            <div style={{ display:'flex', flexWrap:'wrap', gap:5 }}>
               {ICONS.map(ic=>(
                 <button key={ic} onClick={()=>set('icon',ic)}
-                  style={{ width:38,height:38,borderRadius:8,border:`2px solid ${form.icon===ic?'var(--accent)':'var(--border)'}`,background:'var(--bg3)',cursor:'pointer',fontSize:18 }}>
+                  style={{ width:38,height:38,borderRadius:8,cursor:'pointer',fontSize:18,
+                    border: form.icon===ic ? '2px solid var(--accent)' : '2px solid transparent',
+                    background: form.icon===ic ? 'rgba(255,107,53,0.15)' : 'var(--bg3)' }}>
                   {ic}
                 </button>
               ))}
             </div>
           </div>
+
+          <div className="form-group">
+            <label className="form-label">{t('color')}</label>
+            <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+              {COLORS.map(cl=>(
+                <button key={cl} onClick={()=>set('color',cl)}
+                  style={{ width:28,height:28,borderRadius:'50%',cursor:'pointer',background:cl,
+                    border: form.color===cl ? '3px solid var(--text)':'3px solid transparent' }}/>
+              ))}
+            </div>
+          </div>
+
+          {/* Preview */}
+          <div style={{ display:'flex',alignItems:'center',gap:12,padding:'10px 14px',
+            borderRadius:12,background:form.color+'18',border:`1px solid ${form.color}33` }}>
+            <div style={{ width:38,height:38,borderRadius:11,background:form.color+'28',
+              display:'flex',alignItems:'center',justifyContent:'center',fontSize:20 }}>
+              {form.icon}
+            </div>
+            <div>
+              {form.parent_id && (
+                <div style={{ fontSize:10,color:'var(--text3)',marginBottom:2 }}>
+                  ↳ {parentOpts.find(p=>p.id===form.parent_id)?.name}
+                </div>
+              )}
+              <div style={{ fontWeight:700,fontSize:14 }}>{form.name||'Category Name'}</div>
+            </div>
+          </div>
+
           <div className="modal-actions">
-            <button className="btn btn-secondary" onClick={onClose}>Cancel</button>
-            <button className="btn btn-primary" onClick={()=>{ if(!form.name)return; onSave(form); onClose(); }}>Save</button>
+            <button className="btn btn-secondary" onClick={onClose}>{t('cancel')}</button>
+            <button className="btn btn-primary"
+              onClick={()=>{ if(!form.name)return; onSave({...form,is_custom:true}); onClose(); }}>
+              {t('save')}
+            </button>
           </div>
         </div>
       </div>
@@ -267,37 +339,79 @@ export default function Budget() {
       {tab==='categories' && (
         <div>
           <div style={{ fontSize:12, color:'var(--text3)', marginBottom:12 }}>Custom categories — your own additions.</div>
-          {customCats.length===0
-            ? <div className="empty-state"><div className="empty-state-icon">◈</div><div className="empty-state-text">No custom categories yet.</div></div>
-            : <div className="grid-3">
-                {customCats.filter(c=>!c.parent_id).map(c=>(
+          {customCats.length===0 ? (
+            <div className="empty-state">
+              <div className="empty-state-icon">◈</div>
+              <div className="empty-state-text">No custom categories yet.</div>
+              <div style={{fontSize:12,color:'var(--text3)',marginTop:8}}>
+                + Category နှိပ်ပြီး Sub-category ထည့်နိုင်တယ်
+              </div>
+            </div>
+          ) : (
+            <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+              {customCats.filter(c=>!c.parent_id).map(c=>{
+                const subs = customCats.filter(s=>s.parent_id===c.id);
+                return (
                   <div key={c.id} className="card" style={{ padding:0, overflow:'hidden' }}>
-                    <div style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 14px' }}>
-                      <div style={{ fontSize:24,width:40,height:40,borderRadius:10,background:'var(--bg3)',display:'flex',alignItems:'center',justifyContent:'center' }}>
-                        {c.icon}
-                      </div>
+                    {/* Parent category row */}
+                    <div style={{ display:'flex',alignItems:'center',gap:12,padding:'13px 16px' }}>
+                      <div style={{
+                        width:38,height:38,borderRadius:11,
+                        background:(c.color||'#7c6aff')+'22',
+                        display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,
+                      }}>{c.icon}</div>
                       <div style={{ flex:1 }}>
-                        <div style={{ fontWeight:500 }}>{c.name}</div>
-                        <div className={`badge badge-${c.type}`}>{c.type}</div>
+                        <div style={{ fontWeight:600,fontSize:14 }}>{c.name}</div>
+                        <div style={{ fontSize:11,color:'var(--text3)',marginTop:1 }}>
+                          {c.type} · {subs.length} sub-categories
+                        </div>
                       </div>
-                      <div style={{ display:'flex', gap:4 }}>
-                        <button className="btn btn-ghost btn-icon btn-sm" onClick={()=>setCatModal(c)}>✎</button>
-                        <button className="btn btn-ghost btn-icon btn-sm" style={{ color:'var(--red)' }} onClick={()=>delCategory(c.id)}>✕</button>
-                      </div>
+                      <button className="btn btn-ghost btn-icon btn-sm"
+                        title="Add sub-category"
+                        onClick={()=>setCatModal({type:c.type,parent_id:c.id})}
+                        style={{ color:'var(--accent)',fontSize:16 }}>＋</button>
+                      <button className="btn btn-ghost btn-icon btn-sm"
+                        onClick={()=>setCatModal(c)}>✎</button>
+                      <button className="btn btn-ghost btn-icon btn-sm"
+                        style={{ color:'var(--red)' }}
+                        onClick={()=>delCategory(c.id)}>✕</button>
                     </div>
-                    {customCats.filter(s=>s.parent_id===c.id).map(s=>(
-                      <div key={s.id} style={{ display:'flex', alignItems:'center', gap:12, padding:'9px 14px 9px 32px', borderTop:'1px solid var(--border)', background:'var(--bg3)' }}>
-                        <span style={{ fontSize:11, color:'var(--text3)' }}>↳</span>
-                        <div style={{ width:26,height:26,borderRadius:7,background:s.color+'20',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14 }}>{s.icon}</div>
-                        <div style={{ flex:1, fontSize:13, fontWeight:500 }}>{s.name}</div>
-                        <button className="btn btn-ghost btn-icon btn-sm" onClick={()=>setCatModal(s)}>✎</button>
-                        <button className="btn btn-ghost btn-icon btn-sm" style={{ color:'var(--red)' }} onClick={()=>delCategory(s.id)}>✕</button>
+                    {/* Sub-category rows */}
+                    {subs.map(s=>(
+                      <div key={s.id} style={{
+                        display:'flex',alignItems:'center',gap:10,
+                        padding:'10px 16px 10px 52px',
+                        borderTop:'1px solid var(--border)',
+                        background:'var(--bg3)',
+                      }}>
+                        <span style={{fontSize:11,color:'var(--text3)',marginLeft:-20,marginRight:4}}>↳</span>
+                        <div style={{
+                          width:30,height:30,borderRadius:8,
+                          background:(s.color||'#7c6aff')+'22',
+                          display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,
+                        }}>{s.icon}</div>
+                        <div style={{flex:1,fontSize:13,fontWeight:500}}>{s.name}</div>
+                        <button className="btn btn-ghost btn-icon btn-sm"
+                          onClick={()=>setCatModal(s)}>✎</button>
+                        <button className="btn btn-ghost btn-icon btn-sm"
+                          style={{color:'var(--red)'}}
+                          onClick={()=>delCategory(s.id)}>✕</button>
                       </div>
                     ))}
                   </div>
-                ))}
-              </div>
-          }
+                );
+              })}
+              {/* Orphan sub-cats with missing parents - show flat */}
+              {customCats.filter(c=>c.parent_id&&!customCats.find(p=>p.id===c.parent_id)).map(c=>(
+                <div key={c.id} className="card" style={{display:'flex',alignItems:'center',gap:12,padding:'12px 16px'}}>
+                  <div style={{width:36,height:36,borderRadius:10,background:(c.color||'#7c6aff')+'22',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18}}>{c.icon}</div>
+                  <div style={{flex:1}}><div style={{fontWeight:600,fontSize:13}}>{c.name}</div></div>
+                  <button className="btn btn-ghost btn-icon btn-sm" onClick={()=>setCatModal(c)}>✎</button>
+                  <button className="btn btn-ghost btn-icon btn-sm" style={{color:'var(--red)'}} onClick={()=>delCategory(c.id)}>✕</button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -306,7 +420,7 @@ export default function Budget() {
           categories={categories} monthIncome={monthIncome} initial={budgetModal} />
       )}
       {catModal!==null && (
-        <CategoryModal onClose={()=>setCatModal(null)} onSave={saveCategory} initial={catModal} categories={categories} />
+        <CategoryModal onClose={()=>setCatModal(null)} onSave={saveCategory} initial={catModal} allCategories={categories} />
       )}
     </div>
   );

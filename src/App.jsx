@@ -186,6 +186,7 @@ function AppInner() {
   const [theme, setTheme]       = useState('dark');
   const [searchOpen, setSearch] = useState(false);
   const [notifOpen, setNotif]   = useState(false);
+  const [moreOpen,  setMoreOpen] = useState(false);
   const [announcements, setAnns] = useState([]);
 
   // Load active announcements
@@ -266,39 +267,40 @@ function AppInner() {
         </div>
       </aside>
 
-      {/* ── Main ── */}
-      <main className="main-content">
-        <div className="top-header">
-          <div>
-            <div style={{display:"flex",alignItems:"center",gap:8}}><img src="/icons/logo-transparent.png" width="24" height="24" style={{objectFit:"contain"}} onClick={()=>navigateTo('dashboard')} alt="" /><div className="top-header-title">{t(currentNav?.labelKey)}</div></div>
-            <div className="top-header-sub">
-              {new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' })}
-            </div>
+      {/* ── Top Header — direct child of .app, NOT inside scroll ── */}
+      <div className="top-header">
+        <div>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <img src="/icons/logo-transparent.png" width="24" height="24"
+              style={{objectFit:"contain",cursor:"pointer"}}
+              onClick={()=>navigateTo('dashboard')} alt="" />
+            <div className="top-header-title">{t(currentNav?.labelKey)}</div>
           </div>
-          <div className="top-header-right">
-            {/* Theme toggle */}
-            <button className="hdr-btn"
-              onClick={() => setTheme(th => th==='dark'?'light':'dark')}
-              title="Toggle theme"
-              style={{ fontSize:18 }}>
-              {theme==='dark' ? '☀️' : '🌙'}
-            </button>
-
-            {/* Search */}
-            <button className="hdr-btn" onClick={() => setSearch(true)} title="Search">
-              <Icons.search />
-            </button>
-
-            {/* Notifications */}
-            <div style={{ position:'relative' }}>
-              <button className="hdr-btn" onClick={() => setNotif(v => !v)} title="Notifications">
-                <Icons.bell />
-                <span className="notif-dot" />
-              </button>
-              {notifOpen && <NotifDropdown onClose={() => setNotif(false)} />}
-            </div>
+          <div className="top-header-sub">
+            {new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' })}
           </div>
         </div>
+        <div className="top-header-right">
+          <button className="hdr-btn"
+            onClick={() => setTheme(th => th==='dark'?'light':'dark')}
+            title="Toggle theme" style={{ fontSize:18 }}>
+            {theme==='dark' ? '☀️' : '🌙'}
+          </button>
+          <button className="hdr-btn" onClick={() => setSearch(true)} title="Search">
+            <Icons.search />
+          </button>
+          <div style={{ position:'relative' }}>
+            <button className="hdr-btn" onClick={() => setNotif(v => !v)} title="Notifications">
+              <Icons.bell />
+              <span className="notif-dot" />
+            </button>
+            {notifOpen && <NotifDropdown onClose={() => setNotif(false)} />}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Main scroll area ── */}
+      <main className="main-content">
 
         {/* ── Announcement Ticker ── */}
         {announcements.length > 0 && (
@@ -346,7 +348,6 @@ function AppInner() {
           <div className="mob-icon"><Icons.transactions /></div>
           <span className="mobile-nav-label">{t('nav_transactions')}</span>
         </button>
-        {/* Center FAB */}
         <div className="mob-fab-wrap">
           <button className="mob-fab" onClick={() => navigateTo('bulk')}>＋</button>
           <span className="mob-fab-label">{t('add')}</span>
@@ -355,11 +356,55 @@ function AppInner() {
           <div className="mob-icon"><Icons.reports /></div>
           <span className="mobile-nav-label">{t('nav_reports')}</span>
         </button>
-        <button className={`mobile-nav-item ${page==='settings'?'active':''}`} onClick={() => navigateTo('settings')}>
-          <div className="mob-icon"><Icons.settings /></div>
-          <span className="mobile-nav-label">{t('nav_settings')}</span>
+        <button className={`mobile-nav-item ${moreOpen||['settings','budget','savings','debts','vehicles','analytics','bulk'].includes(page)?'active':''}`}
+          onClick={() => setMoreOpen(v=>!v)}>
+          <div className="mob-icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+          </div>
+          <span className="mobile-nav-label">More</span>
         </button>
       </nav>
+
+      {/* ── More drawer ── */}
+      {moreOpen && (
+        <div style={{
+          position:'fixed', inset:0, zIndex:90,
+          background:'rgba(0,0,0,0.5)',
+        }} onClick={() => setMoreOpen(false)}>
+          <div style={{
+            position:'absolute', bottom: 'calc(var(--nav-h) + env(safe-area-inset-bottom))',
+            left:0, right:0,
+            background:'var(--bg2)', borderRadius:'20px 20px 0 0',
+            padding:'20px 16px',
+            display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8,
+          }} onClick={e=>e.stopPropagation()}>
+            {[
+              { id:'settings',  icon:'⚙️', label:t('nav_settings') },
+              { id:'budget',    icon:'📊', label:t('nav_budget') },
+              { id:'savings',   icon:'🎯', label:t('nav_savings') },
+              { id:'debts',     icon:'💸', label:t('nav_debts') },
+              { id:'vehicles',  icon:'🚗', label:t('nav_vehicles') },
+              { id:'analytics', icon:'📈', label:t('nav_analytics') },
+              { id:'bulk',      icon:'📋', label:t('nav_bulk') },
+            ].map(item=>(
+              <button key={item.id}
+                onClick={() => { navigateTo(item.id); setMoreOpen(false); }}
+                style={{
+                  display:'flex', flexDirection:'column', alignItems:'center', gap:6,
+                  padding:'12px 4px', borderRadius:12, border:'none', cursor:'pointer',
+                  background: page===item.id ? 'rgba(255,107,53,0.12)' : 'var(--bg3)',
+                  color: page===item.id ? 'var(--accent)' : 'var(--text2)',
+                  fontFamily:'var(--font)',
+                }}>
+                <span style={{ fontSize:24 }}>{item.icon}</span>
+                <span style={{ fontSize:10, fontWeight:600, textAlign:'center' }}>{item.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {searchOpen && <SearchOverlay onClose={() => setSearch(false)} />}
     </div>
