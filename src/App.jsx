@@ -270,9 +270,12 @@ function AppInner() {
 }
 
 export default function App() {
-  // Simple URL-based routing for admin
+  // Simple URL-based routing
   if (window.location.pathname === '/admin') {
     return <Admin />;
+  }
+  if (window.location.pathname === '/reset-password') {
+    return <AuthProvider><Auth /></AuthProvider>;
   }
   return <AuthProvider><AppInner /></AuthProvider>;
 }

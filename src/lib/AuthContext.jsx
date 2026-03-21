@@ -43,8 +43,9 @@ export function AuthProvider({ children }) {
     loading,
     signUp:           auth.signUp,
     signIn:           auth.signIn,
-    signInWithGoogle: auth.signInWithGoogle,
     signOut:          auth.signOut,
+    resetPassword:    auth.resetPassword,
+    updatePassword:   auth.updatePassword,
     refreshProfile:   () => user && loadProfile(user.id),
   };
 
