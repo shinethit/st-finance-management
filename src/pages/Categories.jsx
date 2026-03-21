@@ -14,8 +14,15 @@ function CatModal({ onClose, onSave, initial, parentOptions }) {
     parent_id: null, is_custom: true,
     ...initial,
   });
+  const [saving, setSaving] = useState(false);
+  const [error,  setError]  = useState('');
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
   const isEdit = !!initial?.id;
+
+  // Show which parent is pre-selected (when opening via + button)
+  const selectedParent = form.parent_id
+    ? parentOptions.find(p => p.id === form.parent_id)
+    : null;
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -28,6 +35,21 @@ function CatModal({ onClose, onSave, initial, parentOptions }) {
         </div>
 
         <div className="modal-form">
+          {/* If sub-category — show parent info at top */}
+          {selectedParent && (
+            <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px',
+              borderRadius:10, background:'var(--bg3)', marginBottom:4 }}>
+              <span style={{ fontSize:20 }}>{selectedParent.icon}</span>
+              <div>
+                <div style={{ fontSize:11, color:'var(--text3)' }}>Sub-category of</div>
+                <div style={{ fontWeight:700, fontSize:14 }}>{selectedParent.name}</div>
+              </div>
+              <button onClick={() => set('parent_id', null)}
+                style={{ marginLeft:'auto', background:'none', border:'none',
+                  cursor:'pointer', color:'var(--text3)', fontSize:16 }}>✕</button>
+            </div>
+          )}
+
           {/* Type — only top-level categories choose type */}
           {!form.parent_id && (
             <div className="type-toggle">
@@ -119,14 +141,29 @@ function CatModal({ onClose, onSave, initial, parentOptions }) {
             </div>
           </div>
 
+          {error && (
+            <div style={{ padding:'10px 12px', borderRadius:8, fontSize:13,
+              background:'rgba(251,113,133,0.1)', color:'var(--red)', marginBottom:4 }}>
+              ⚠ {error}
+            </div>
+          )}
           <div className="modal-actions">
             <button className="btn btn-secondary" onClick={onClose}>{t('cancel')}</button>
-            <button className="btn btn-primary"
-              onClick={() => {
-                if (!form.name.trim()) return;
-                onSave({ ...form, is_custom: true });
-                onClose();
-              }}>{t('save')}</button>
+            <button className="btn btn-primary" disabled={saving}
+              onClick={async () => {
+                if (!form.name.trim()) { setError('Name ထည့်ပါ'); return; }
+                setSaving(true);
+                setError('');
+                try {
+                  await onSave({ ...form, is_custom: true });
+                  onClose();
+                } catch(e) {
+                  setError(e.message || 'Save မအောင်မြင်ဘူး — features.sql run ပြီးပြီလား?');
+                  setSaving(false);
+                }
+              }}>
+              {saving ? 'Saving…' : t('save')}
+            </button>
           </div>
         </div>
       </div>

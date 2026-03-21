@@ -136,13 +136,25 @@ export function useCategories() {
 
   const saveCategory = useCallback(async (cat) => {
     const isNew = !cat.id;
+    // Get current user_id for RLS
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const payload = { ...cat, is_custom: true };
+    if (isNew) payload.user_id = user.id;
+
     const { data: row, error } = isNew
-      ? await db.insert('categories', { ...cat, is_custom: true })
-      : await db.update('categories', cat.id, cat);
-    if (error) throw error;
-    setData(prev => isNew ? [...prev, row] : prev.map(r => r.id === row.id ? row : r));
+      ? await db.insert('categories', payload)
+      : await db.update('categories', cat.id, payload);
+
+    if (error) {
+      console.error('saveCategory error:', error);
+      throw error;
+    }
+    // Full reload so parent-child relationships refresh correctly
+    await load();
     return row;
-  }, []);
+  }, [load]);
 
   const del = useCallback(async (id) => {
     await db.delete('categories', id);
