@@ -34,12 +34,12 @@ function BudgetModal({ onClose, onSave, categories, monthIncome, initial }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e=>e.stopPropagation()}>
         <div className="modal-header">
-          <div className="modal-title">{initial?.id?'Edit':'New'} Budget</div>
+          <div className="modal-title">{initial?.id?t('edit'):'New'} Budget</div>
           <button className="btn btn-ghost btn-icon" onClick={onClose}>✕</button>
         </div>
         <div className="modal-form">
           <div className="form-group">
-            <label className="form-label">Budget Name</label>
+            <label className="form-label">{t('budget_name')}</label>
             <input className="form-input" placeholder="e.g. Food, Donation" value={form.name}
               onChange={e=>set('name',e.target.value)} autoFocus />
           </div>
@@ -53,7 +53,7 @@ function BudgetModal({ onClose, onSave, categories, monthIncome, initial }) {
 
           {/* Budget type toggle */}
           <div className="form-group">
-            <label className="form-label">Budget Type</label>
+            <label className="form-label">{t('budget_type')}</label>
             <div className="type-toggle">
               <button className={`type-btn expense ${!isPercent?'active':''}`} onClick={()=>set('budget_type','fixed')}>
                 Fixed Amount
@@ -66,13 +66,13 @@ function BudgetModal({ onClose, onSave, categories, monthIncome, initial }) {
 
           {!isPercent ? (
             <div className="form-group">
-              <label className="form-label">Amount</label>
+              <label className="form-label">{t('amount')}</label>
               <input className="form-input" type="number" placeholder="0" value={form.amount}
                 onChange={e=>set('amount',e.target.value)} />
             </div>
           ) : (
             <div className="form-group">
-              <label className="form-label">Percentage of Monthly Income</label>
+              <label className="form-label">{t('budget_percent')}</label>
               <div style={{ position:'relative' }}>
                 <input className="form-input" type="number" step="0.1" min="0" max="100"
                   placeholder="e.g. 5" value={form.percent_of_income}
@@ -94,11 +94,11 @@ function BudgetModal({ onClose, onSave, categories, monthIncome, initial }) {
           )}
 
           <div className="form-group">
-            <label className="form-label">Period</label>
+            <label className="form-label">{t('period')}</label>
             <select className="form-select" value={form.period} onChange={e=>set('period',e.target.value)}>
-              <option value="monthly">Monthly</option>
-              <option value="weekly">Weekly</option>
-              <option value="yearly">Yearly</option>
+              <option value="monthly">{t('monthly')}</option>
+              <option value="weekly">{t('weekly')}</option>
+              <option value="yearly">{t('yearly')}</option>
             </select>
           </div>
           <div className="modal-actions">
@@ -120,20 +120,20 @@ function CategoryModal({ onClose, onSave, initial }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e=>e.stopPropagation()}>
         <div className="modal-header">
-          <div className="modal-title">{initial?.id?'Edit':'New'} Category</div>
+          <div className="modal-title">{initial?.id?t('edit'):'New'} Category</div>
           <button className="btn btn-ghost btn-icon" onClick={onClose}>✕</button>
         </div>
         <div className="modal-form">
           <div className="type-toggle">
-            <button className={`type-btn expense ${form.type==='expense'?'active':''}`} onClick={()=>set('type','expense')}>Expense</button>
-            <button className={`type-btn income  ${form.type==='income' ?'active':''}`} onClick={()=>set('type','income')}>Income</button>
+            <button className={`type-btn expense ${form.type==='expense'?'active':''}`} onClick={()=>set('type','expense')}>{t('expense')}</button>
+            <button className={`type-btn income  ${form.type==='income' ?'active':''}`} onClick={()=>set('type','income')}>{t('income')}</button>
           </div>
           <div className="form-group">
-            <label className="form-label">Name</label>
+            <label className="form-label">{t('name')}</label>
             <input className="form-input" placeholder="e.g. Coffee" value={form.name} onChange={e=>set('name',e.target.value)} autoFocus />
           </div>
           <div className="form-group">
-            <label className="form-label">Icon</label>
+            <label className="form-label">{t('icon')}</label>
             <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
               {ICONS.map(ic=>(
                 <button key={ic} onClick={()=>set('icon',ic)}
@@ -154,6 +154,7 @@ function CategoryModal({ onClose, onSave, initial }) {
 }
 
 export default function Budget() {
+  const { t } = useLang();
   const { data: budgets, monthIncome, save: saveBudget, del: delBudget } = useBudgets();
   const { data: categories, saveCategory, del: delCategory } = useCategories();
   const { data: transactions } = useTransactions();
@@ -181,7 +182,7 @@ export default function Budget() {
     <div className="page">
       <div className="page-header">
         <div>
-          <div className="page-title">Budget & Categories</div>
+          <div className="page-title">{t('budget_categories')}</div>
           <div className="page-subtitle">
             {monthIncome > 0
               ? `This month income: ${fmt(monthIncome)} · Budgeted: ${fmt(totalEffective)} (${totalPercent > 0 ? totalPercent.toFixed(1)+'% allocated' : ''})`
@@ -212,8 +213,8 @@ export default function Budget() {
       )}
 
       <div className="type-toggle" style={{ marginBottom:20, maxWidth:280 }}>
-        <button className={`type-btn expense ${tab==='budgets'?'active':''}`} onClick={()=>setTab('budgets')}>Budgets</button>
-        <button className={`type-btn income  ${tab==='categories'?'active':''}`} onClick={()=>setTab('categories')}>Categories</button>
+        <button className={`type-btn expense ${tab==='budgets'?'active':''}`} onClick={()=>setTab('budgets')}>{t('budgets')}</button>
+        <button className={`type-btn income  ${tab==='categories'?'active':''}`} onClick={()=>setTab('categories')}>{t('categories')}</button>
       </div>
 
       {tab==='budgets' && (
@@ -265,7 +266,7 @@ export default function Budget() {
         <div>
           <div style={{ fontSize:12, color:'var(--text3)', marginBottom:12 }}>Custom categories — your own additions.</div>
           {customCats.length===0
-            ? <div className="empty-state"><div className="empty-state-icon">◈</div><div className="empty-state-text">No custom categories yet.</div></div>
+            ? <div className="empty-state"><div className="empty-state-icon">◈</div><div className="empty-state-text">{t('no_categories')}</div></div>
             : <div className="grid-3">
                 {customCats.map(c=>(
                   <div key={c.id} className="card" style={{ display:'flex', alignItems:'center', gap:12 }}>

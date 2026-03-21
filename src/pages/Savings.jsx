@@ -18,21 +18,21 @@ function SavingsModal({ onClose, onSave, initial }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e=>e.stopPropagation()}>
         <div className="modal-header">
-          <div className="modal-title">{initial?.id?'Edit':'New'} Savings Goal</div>
+          <div className="modal-title">{initial?.id?t('edit'):'New'} Savings Goal</div>
           <button className="btn btn-ghost btn-icon" onClick={onClose}>✕</button>
         </div>
         <div className="modal-form">
           <div className="form-group">
-            <label className="form-label">Goal Name</label>
+            <label className="form-label">{t('goal_name')}</label>
             <input className="form-input" placeholder="e.g. New Car" value={form.name} onChange={e=>set('name',e.target.value)} autoFocus />
           </div>
           <div className="grid-2">
             <div className="form-group">
-              <label className="form-label">Target Amount</label>
+              <label className="form-label">{t('target_amount')}</label>
               <input className="form-input" type="number" placeholder="0" value={form.target_amount} onChange={e=>set('target_amount',e.target.value)} />
             </div>
             <div className="form-group">
-              <label className="form-label">Saved So Far</label>
+              <label className="form-label">{t('saved_so_far')}</label>
               <input className="form-input" type="number" placeholder="0" value={form.current_amount} onChange={e=>set('current_amount',e.target.value)} />
             </div>
           </div>
@@ -41,7 +41,7 @@ function SavingsModal({ onClose, onSave, initial }) {
             <input className="form-input" type="date" value={form.deadline} onChange={e=>set('deadline',e.target.value)} />
           </div>
           <div className="form-group">
-            <label className="form-label">Icon</label>
+            <label className="form-label">{t('icon')}</label>
             <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
               {ICONS.map(ic=>(
                 <button key={ic} onClick={()=>set('icon',ic)}
@@ -52,7 +52,7 @@ function SavingsModal({ onClose, onSave, initial }) {
             </div>
           </div>
           <div className="form-group">
-            <label className="form-label">Color</label>
+            <label className="form-label">{t('color')}</label>
             <div style={{ display:'flex', gap:6 }}>
               {COLORS.map(col=>(
                 <button key={col} onClick={()=>set('color',col)}
@@ -85,7 +85,7 @@ function AddModal({ goal, onClose, onSave }) {
         </div>
         <div className="modal-form">
           <div className="form-group">
-            <label className="form-label">Amount to add</label>
+            <label className="form-label">{t('amount_to_add')}</label>
             <input className="form-input" type="number" placeholder="0" value={amount} onChange={e=>setAmount(e.target.value)} autoFocus />
           </div>
           <div className="modal-actions">
@@ -94,7 +94,7 @@ function AddModal({ goal, onClose, onSave }) {
               if(!amount)return;
               onSave({...goal, current_amount: Number(goal.current_amount)+Number(amount)});
               onClose();
-            }}>Add</button>
+            }}>{t('add')}</button>
           </div>
         </div>
       </div>
@@ -103,6 +103,7 @@ function AddModal({ goal, onClose, onSave }) {
 }
 
 export default function Savings() {
+  const { t } = useLang();
   const { data: goals, loading, save, del } = useSavings();
   const [modal, setModal]     = useState(null);
   const [addModal, setAddModal] = useState(null);
@@ -114,7 +115,7 @@ export default function Savings() {
     <div className="page">
       <div className="page-header">
         <div>
-          <div className="page-title">Savings Goals</div>
+          <div className="page-title">{t('savings_goals')}</div>
           <div className="page-subtitle">{fmt(totalSaved)} saved of {fmt(totalTarget)} total</div>
         </div>
         <button className="btn btn-primary" onClick={()=>setModal({})}>+ New Goal</button>
@@ -123,7 +124,7 @@ export default function Savings() {
       {loading
         ? <div className="empty-state"><div className="empty-state-text">Loading…</div></div>
         : goals.length===0
-          ? <div className="empty-state"><div className="empty-state-icon">◇</div><div className="empty-state-text">No savings goals yet.</div></div>
+          ? <div className="empty-state"><div className="empty-state-icon">◇</div><div className="empty-state-text">{t('no_savings')}</div></div>
           : <div className="grid-2">
               {goals.map(g=>{
                 const pct  = Math.min(100,((Number(g.current_amount)/Number(g.target_amount))*100)||0);

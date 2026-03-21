@@ -21,7 +21,7 @@ function DebtModal({ onClose, onSave, initial }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e=>e.stopPropagation()}>
         <div className="modal-header">
-          <div className="modal-title">{initial?.id?'Edit':'New'} Debt / Loan</div>
+          <div className="modal-title">{initial?.id?t('edit'):'New'} Debt / Loan</div>
           <button className="btn btn-ghost btn-icon" onClick={onClose}>✕</button>
         </div>
         <div className="modal-form">
@@ -58,7 +58,7 @@ function DebtModal({ onClose, onSave, initial }) {
 
           <div className="grid-2">
             <div className="form-group">
-              <label className="form-label">Amount</label>
+              <label className="form-label">{t('amount')}</label>
               <input className="form-input" type="number" placeholder="0"
                 value={form.total_amount} onChange={e=>set('total_amount',e.target.value)} />
             </div>
@@ -76,7 +76,7 @@ function DebtModal({ onClose, onSave, initial }) {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Note</label>
+            <label className="form-label">{t('note')}</label>
             <textarea className="form-textarea" placeholder="Purpose, terms…"
               value={form.note} onChange={e=>set('note',e.target.value)} />
           </div>
@@ -106,7 +106,7 @@ function PaymentModal({ debt, onClose, onPay }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e=>e.stopPropagation()} style={{ maxWidth:380 }}>
         <div className="modal-header">
-          <div className="modal-title">Record Payment</div>
+          <div className="modal-title">{t('record_payment')}</div>
           <button className="btn btn-ghost btn-icon" onClick={onClose}>✕</button>
         </div>
         <div className="modal-form">
@@ -120,7 +120,7 @@ function PaymentModal({ debt, onClose, onPay }) {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Amount</label>
+            <label className="form-label">{t('amount')}</label>
             <input className="form-input" type="number" placeholder="0" value={amount}
               onChange={e=>setAmount(e.target.value)} autoFocus />
           </div>
@@ -136,7 +136,7 @@ function PaymentModal({ debt, onClose, onPay }) {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Note</label>
+            <label className="form-label">{t('note')}</label>
             <input className="form-input" placeholder="Optional" value={note}
               onChange={e=>setNote(e.target.value)} />
           </div>
@@ -148,7 +148,7 @@ function PaymentModal({ debt, onClose, onPay }) {
               onPay(debt.id, Number(amount), note);
               onClose();
             }}>
-              {isLend ? 'Record Receipt' : 'Record Payment'}
+              {isLend ? 'Record Receipt' : t('record_payment')}
             </button>
           </div>
         </div>
@@ -191,7 +191,7 @@ function DebtCard({ debt, onEdit, onDelete, onPay }) {
               {isLend ? 'I Lent' : 'I Borrowed'}
             </span>
             {settled && <span className="badge badge-income">✓ Settled</span>}
-            {overdue && <span className="badge badge-expense">Overdue</span>}
+            {overdue && <span className="badge badge-expense">{t('overdue')}</span>}
           </div>
 
           {debt.contact_phone && (
@@ -201,15 +201,15 @@ function DebtCard({ debt, onEdit, onDelete, onPay }) {
           {/* Amounts */}
           <div style={{ display:'flex', gap:20, marginBottom:10 }}>
             <div>
-              <div style={{ fontSize:10, color:'var(--text3)', textTransform:'uppercase', letterSpacing:'0.5px', marginBottom:3 }}>Total</div>
+              <div style={{ fontSize:10, color:'var(--text3)', textTransform:'uppercase', letterSpacing:'0.5px', marginBottom:3 }}>{t('total')}</div>
               <div style={{ fontFamily:'var(--mono)', fontSize:17, fontWeight:500 }}>K {fmt(debt.total_amount)}</div>
             </div>
             <div>
-              <div style={{ fontSize:10, color:'var(--text3)', textTransform:'uppercase', letterSpacing:'0.5px', marginBottom:3 }}>Paid</div>
+              <div style={{ fontSize:10, color:'var(--text3)', textTransform:'uppercase', letterSpacing:'0.5px', marginBottom:3 }}>{t('paid')}</div>
               <div style={{ fontFamily:'var(--mono)', fontSize:17, color:'var(--green)' }}>K {fmt(debt.paid_amount)}</div>
             </div>
             <div>
-              <div style={{ fontSize:10, color:'var(--text3)', textTransform:'uppercase', letterSpacing:'0.5px', marginBottom:3 }}>Left</div>
+              <div style={{ fontSize:10, color:'var(--text3)', textTransform:'uppercase', letterSpacing:'0.5px', marginBottom:3 }}>{t('left')}</div>
               <div style={{ fontFamily:'var(--mono)', fontSize:17, color: settled?'var(--green)':'var(--red)' }}>
                 {settled ? '—' : `K ${fmt(remaining)}`}
               </div>
@@ -278,6 +278,7 @@ function DebtCard({ debt, onEdit, onDelete, onPay }) {
 
 // ── Main Debts Page ───────────────────────────────────────────
 export default function Debts() {
+  const { t } = useLang();
   const { data:debts, loading, save, del, addPayment } = useDebts();
   const [modal, setModal]       = useState(null);
   const [payModal, setPayModal] = useState(null);
@@ -294,7 +295,7 @@ export default function Debts() {
     <div className="page">
       <div className="page-header">
         <div>
-          <div className="page-title">Debts & Loans</div>
+          <div className="page-title">{t('debts')}</div>
           <div className="page-subtitle">{active.length} active · {settled.length} settled</div>
         </div>
         <button className="btn btn-primary" onClick={()=>setModal({})}>+ New</button>
@@ -308,7 +309,7 @@ export default function Debts() {
             <div className="stat-label" style={{ marginBottom:0 }}>I Lent — To Receive</div>
           </div>
           <div className="stat-value" style={{ color:'var(--blue)' }}>+K {fmt(totalLent)}</div>
-          <div className="stat-sub">Others owe you</div>
+          <div className="stat-sub">{t('others_owe')}</div>
         </div>
         <div className="stat-card" style={{ borderColor:'rgba(255,77,114,0.22)' }}>
           <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
@@ -316,7 +317,7 @@ export default function Debts() {
             <div className="stat-label" style={{ marginBottom:0 }}>I Borrowed — To Pay</div>
           </div>
           <div className="stat-value negative">-K {fmt(totalBorrowed)}</div>
-          <div className="stat-sub">You owe others</div>
+          <div className="stat-sub">{t('you_owe')}</div>
         </div>
       </div>
 

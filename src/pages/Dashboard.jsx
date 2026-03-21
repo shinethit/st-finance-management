@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useDashboard } from '../hooks/useData';
 import { useWallets } from '../hooks/useData';
+import { useLang } from '../lib/LangContext';
 import { supabase } from '../lib/supabase';
 
 const fmt = n => new Intl.NumberFormat('en-US').format(Math.abs(Number(n)||0));
@@ -77,7 +78,7 @@ function TrendChart() {
   return (
     <div className="card" style={{ marginTop:14 }}>
       <div className="section-header">
-        <div className="section-title">Trending Report</div>
+        <div className="section-title">{t('trending_report')}</div>
         <div style={{ display:'flex', gap:10, fontSize:11, color:'var(--text3)' }}>
           <span style={{ display:'flex', alignItems:'center', gap:4 }}>
             <span style={{ width:8, height:8, background:'var(--green)', borderRadius:2, display:'inline-block' }}/>Income
@@ -165,8 +166,8 @@ export default function Dashboard({ onNavigate }) {
       {wallets.length > 0 && (
         <div style={{ marginBottom:20 }}>
           <div className="section-header">
-            <div className="section-title">My Wallets</div>
-            <button className="btn btn-ghost btn-sm" style={{ color:'var(--accent)' }}>See all</button>
+            <div className="section-title">{t('my_wallets')}</div>
+            <button className="btn btn-ghost btn-sm" style={{ color:'var(--accent)' }}>{t('see_all')}</button>
           </div>
           <div style={{ display:'flex', gap:10 }}>
             {wallets.slice(0,2).map((w,i) => (
@@ -192,14 +193,14 @@ export default function Dashboard({ onNavigate }) {
       {((s?.totalLent||0)>0||(s?.totalBorrowed||0)>0) && (
         <div className="grid-2" style={{ marginBottom:16 }}>
           <div className="stat-card" style={{ borderColor:'rgba(96,165,250,0.2)' }}>
-            <div className="stat-label">I Lent</div>
+            <div className="stat-label">{t('i_lent')}</div>
             <div className="stat-value" style={{ fontSize:20, color:'var(--blue)' }}>K {fmt(s?.totalLent)}</div>
-            <div className="stat-sub">To receive</div>
+            <div className="stat-sub">{t('to_receive')}</div>
           </div>
           <div className="stat-card" style={{ borderColor:'rgba(255,107,53,0.2)' }}>
-            <div className="stat-label">I Borrowed</div>
+            <div className="stat-label">{t('i_borrowed')}</div>
             <div className="stat-value" style={{ fontSize:20, color:'var(--accent)' }}>K {fmt(s?.totalBorrowed)}</div>
-            <div className="stat-sub">To pay back</div>
+            <div className="stat-sub">{t('to_pay_back')}</div>
           </div>
         </div>
       )}
@@ -219,13 +220,13 @@ export default function Dashboard({ onNavigate }) {
         {/* Recent Transactions */}
         <div className="card">
           <div className="section-header">
-            <div className="section-title">Recent</div>
-            <button className="btn btn-ghost btn-sm" style={{ color:'var(--accent)' }} onClick={()=>onNavigate('transactions')}>See all</button>
+            <div className="section-title">{t('recent_tx')}</div>
+            <button className="btn btn-ghost btn-sm" style={{ color:'var(--accent)' }} onClick={()=>onNavigate('transactions')}>{t('see_all')}</button>
           </div>
           {!(s?.recentTransactions?.length)
             ? <div className="empty-state" style={{ padding:'20px 0' }}>
                 <div className="empty-state-icon">↕</div>
-                <div className="empty-state-text">No transactions yet</div>
+                <div className="empty-state-text">{t('no_tx_yet')}</div>
               </div>
             : <div className="tx-list">
                 {(s.recentTransactions||[]).map((tx,i) => (
@@ -253,13 +254,13 @@ export default function Dashboard({ onNavigate }) {
         {/* Budgets */}
         <div className="card">
           <div className="section-header">
-            <div className="section-title">Budgets</div>
-            <button className="btn btn-ghost btn-sm" style={{ color:'var(--accent)' }} onClick={()=>onNavigate('budget')}>Manage</button>
+            <div className="section-title">{t('budgets')}</div>
+            <button className="btn btn-ghost btn-sm" style={{ color:'var(--accent)' }} onClick={()=>onNavigate('budget')}>{t('manage')}</button>
           </div>
           {!(s?.budgets?.length)
             ? <div className="empty-state" style={{ padding:'20px 0' }}>
                 <div className="empty-state-icon">◎</div>
-                <div className="empty-state-text">No budgets set</div>
+                <div className="empty-state-text">{t('no_budgets')}</div>
               </div>
             : <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
                 {(s.budgets||[]).slice(0,4).map(b => {

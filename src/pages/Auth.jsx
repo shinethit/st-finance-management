@@ -1,9 +1,11 @@
 // src/pages/Auth.jsx — Login + Register + Forgot Password + Reset Password
 import { useState } from 'react';
 import { useAuth } from '../lib/AuthContext';
+import { useLang } from '../lib/LangContext';
 
 export default function Auth() {
   const { signIn, signUp, resetPassword, updatePassword } = useAuth();
+  const { t } = useLang();
 
   const isResetPage = window.location.pathname === '/reset-password';
 
@@ -20,13 +22,13 @@ export default function Auth() {
   if (isResetPage) {
     const handleReset = async () => {
       if (!password || !confirm) return;
-      if (password !== confirm) { setError('Passwords do not match.'); return; }
-      if (password.length < 6)  { setError('Password must be at least 6 characters.'); return; }
+      if (password !== confirm) { setError(t('pw_mismatch')); return; }
+      if (password.length < 6)  { setError(t('pw_too_short')); return; }
       setLoading(true); setError('');
       const { error } = await updatePassword(password);
       if (error) { setError(error.message); }
       else {
-        setSuccess('Password updated! Redirecting…');
+        setSuccess(t('pw_updated'));
         setTimeout(() => { window.location.href = '/'; }, 1500);
       }
       setLoading(false);
@@ -56,7 +58,7 @@ export default function Auth() {
             {success && <div style={{ fontSize:13, color:'var(--green)', background:'rgba(34,197,94,0.1)',  padding:'10px 12px', borderRadius:8 }}>{success}</div>}
             <button className="btn btn-primary" style={{ width:'100%', justifyContent:'center', padding:11 }}
               onClick={handleReset} disabled={loading}>
-              {loading ? 'Please wait…' : 'Update Password'}
+              {loading ? t('please_wait') : t('update_password')}
             </button>
           </div>
         </div>
@@ -71,7 +73,7 @@ export default function Auth() {
       setLoading(true); setError(''); setSuccess('');
       const { error } = await resetPassword(email);
       if (error) setError(error.message);
-      else setSuccess('Password reset email sent! Please check your inbox.');
+      else setSuccess(t('reset_sent'));
       setLoading(false);
       return;
     }
@@ -84,7 +86,7 @@ export default function Auth() {
       } else {
         const { error } = await signUp(email, password, name);
         if (error) throw error;
-        setSuccess('Account created! Please check your email to confirm.');
+        setSuccess(t('account_created'));
       }
     } catch (e) {
       setError(e.message);
@@ -128,15 +130,15 @@ export default function Auth() {
         <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
           {mode === 'register' && (
             <div className="form-group">
-              <label className="form-label">Name</label>
+              <label className="form-label">{t('name')}</label>
               <input className="form-input" type="text" placeholder="Your name"
                 value={name} onChange={e => setName(e.target.value)} />
             </div>
           )}
 
           <div className="form-group">
-            <label className="form-label">Email</label>
-            <input className="form-input" type="email" placeholder="you@example.com"
+            <label className="form-label">{t('email')}</label>
+            <input className="form-input" type="email" placeholder={t('email')}
               value={email} onChange={e => setEmail(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSubmit()} />
           </div>
@@ -144,7 +146,7 @@ export default function Auth() {
           {mode !== 'forgot' && (
             <div className="form-group">
               <label className="form-label" style={{ display:'flex', justifyContent:'space-between' }}>
-                <span>Password</span>
+                <span>{t('password')}</span>
                 {mode === 'login' && (
                   <button onClick={() => switchMode('forgot')}
                     style={{ background:'none', border:'none', color:'var(--accent)', cursor:'pointer', fontSize:12, padding:0 }}>
@@ -163,10 +165,10 @@ export default function Auth() {
 
           <button className="btn btn-primary" style={{ width:'100%', justifyContent:'center', padding:11 }}
             onClick={handleSubmit} disabled={loading}>
-            {loading ? 'Please wait…'
-              : mode === 'login'    ? 'Sign In'
-              : mode === 'register' ? 'Create Account'
-              : 'Send Reset Link'}
+            {loading ? t('please_wait')
+              : mode === 'login'    ? t('sign_in')
+              : mode === 'register' ? t('create_account')
+              : t('send_reset')}
           </button>
         </div>
       </div>

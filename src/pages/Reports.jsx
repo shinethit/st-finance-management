@@ -55,6 +55,7 @@ function CatRow({ name, icon, amount, maxAmt, color, i }) {
 }
 
 export default function Reports() {
+  const { t } = useLang();
   const { data:transactions }       = useTransactions();
   const { data:categories }         = useCategories();
   const { data:vehicles }           = useVehicles();
@@ -114,7 +115,7 @@ export default function Reports() {
     <div className="page">
       <div className="page-header">
         <div>
-          <div className="page-title">Reports</div>
+          <div className="page-title">{t('reports')}</div>
           <div className="page-subtitle">{now.toLocaleString('en-US',{month:'long',year:'numeric'})}</div>
         </div>
       </div>
@@ -122,15 +123,15 @@ export default function Reports() {
       {/* This month stats */}
       <div className="grid-3" style={{ marginBottom:20 }}>
         <div className="stat-card">
-          <div className="stat-label">Income</div>
+          <div className="stat-label">{t('income')}</div>
           <div className="stat-value positive">+K {fmt(monthInc)}</div>
         </div>
         <div className="stat-card">
-          <div className="stat-label">Expenses</div>
+          <div className="stat-label">{t('expense')}</div>
           <div className="stat-value negative">-K {fmt(monthExp)}</div>
         </div>
         <div className="stat-card">
-          <div className="stat-label">Net</div>
+          <div className="stat-label">{t('net')}</div>
           <div className={`stat-value ${monthInc-monthExp>=0?'positive':'negative'}`}>
             {monthInc-monthExp>=0?'+':'-'}K {fmt(monthInc-monthExp)}
           </div>
@@ -169,9 +170,9 @@ export default function Reports() {
       <div className="grid-2" style={{ marginBottom:16 }}>
         {/* Category breakdown */}
         <div className="card">
-          <div className="section-title" style={{ marginBottom:16 }}>Spending by Category</div>
+          <div className="section-title" style={{ marginBottom:16 }}>{t('spending_by_category')}</div>
           {catBreakdown.length===0
-            ? <div className="empty-state" style={{ padding:'20px 0' }}><div className="empty-state-text">No expenses this month</div></div>
+            ? <div className="empty-state" style={{ padding:'20px 0' }}><div className="empty-state-text">{t('no_expenses_month')}</div></div>
             : catBreakdown.slice(0,7).map(({id,amount,cat},i)=>(
                 <CatRow key={id} name={cat?.name||'Others'} icon={cat?.icon||'📦'}
                   amount={amount} maxAmt={maxCat} i={i} />
@@ -181,7 +182,7 @@ export default function Reports() {
 
         {/* Savings summary */}
         <div className="card">
-          <div className="section-title" style={{ marginBottom:16 }}>Income vs Expense</div>
+          <div className="section-title" style={{ marginBottom:16 }}>{t('income_vs_expense')}</div>
           <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
             {monthlyTrend.map((m,i)=>{
               const net   = m.income - m.expense;
@@ -209,7 +210,7 @@ export default function Reports() {
       {/* Vehicle costs */}
       {vehicleSummary.length>0 && (
         <div className="card">
-          <div className="section-title" style={{ marginBottom:16 }}>Vehicle Cost Summary</div>
+          <div className="section-title" style={{ marginBottom:16 }}>{t('vehicle_cost_summary')}</div>
           {vehicleSummary.map(v=>(
             <div key={v.vid} style={{ display:'flex', alignItems:'center', gap:14, padding:'12px 0', borderBottom:'1px solid var(--border)' }}>
               <div style={{ fontSize:26 }}>🚗</div>

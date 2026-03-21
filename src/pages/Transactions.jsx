@@ -19,21 +19,21 @@ function TxModal({ onClose, onSave, categories, wallets, initial }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
-          <div className="modal-title">{initial?.id ? 'Edit' : 'Add'} Transaction</div>
+          <div className="modal-title">{initial?.id ? t('edit') : 'Add'} Transaction</div>
           <button className="btn btn-ghost btn-icon" onClick={onClose}>✕</button>
         </div>
         <div className="modal-form">
           <div className="type-toggle">
-            <button className={`type-btn expense ${form.type === 'expense' ? 'active' : ''}`} onClick={() => set('type','expense')}>Expense</button>
-            <button className={`type-btn income  ${form.type === 'income'  ? 'active' : ''}`} onClick={() => set('type','income')}>Income</button>
+            <button className={`type-btn expense ${form.type === 'expense' ? 'active' : ''}`} onClick={() => set('type','expense')}>{t('expense')}</button>
+            <button className={`type-btn income  ${form.type === 'income'  ? 'active' : ''}`} onClick={() => set('type','income')}>{t('income')}</button>
           </div>
           <div className="form-group">
-            <label className="form-label">Amount</label>
+            <label className="form-label">{t('amount')}</label>
             <input className="form-input" type="number" placeholder="0" value={form.amount}
               onChange={e => set('amount', e.target.value)} autoFocus />
           </div>
           <div className="form-group">
-            <label className="form-label">Category</label>
+            <label className="form-label">{t('category')}</label>
             <select className="form-select" value={form.category_id} onChange={e => set('category_id', e.target.value)}>
               <option value="">— Select —</option>
               {cats.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
@@ -41,28 +41,28 @@ function TxModal({ onClose, onSave, categories, wallets, initial }) {
           </div>
           {wallets.length > 0 && (
             <div className="form-group">
-              <label className="form-label">Wallet</label>
+              <label className="form-label">{t('wallet')}</label>
               <select className="form-select" value={form.wallet_id} onChange={e => set('wallet_id', e.target.value)}>
                 {wallets.map(w => <option key={w.id} value={w.id}>{w.icon} {w.name}</option>)}
               </select>
             </div>
           )}
           <div className="form-group">
-            <label className="form-label">Date</label>
+            <label className="form-label">{t('date')}</label>
             <input className="form-input" type="date" value={form.date} onChange={e => set('date', e.target.value)} />
           </div>
           <div className="form-group">
-            <label className="form-label">Note</label>
+            <label className="form-label">{t('note')}</label>
             <input className="form-input" type="text" placeholder="Optional…" value={form.note}
               onChange={e => set('note', e.target.value)} />
           </div>
           <div className="modal-actions">
-            <button className="btn btn-secondary" onClick={onClose}>Cancel</button>
+            <button className="btn btn-secondary" onClick={onClose}>{t('cancel')}</button>
             <button className="btn btn-primary" onClick={() => {
               if (!form.amount || !form.date) return;
               onSave({ ...form, amount: Number(form.amount) });
               onClose();
-            }}>Save</button>
+            }}>{t('save')}</button>
           </div>
         </div>
       </div>
@@ -71,6 +71,7 @@ function TxModal({ onClose, onSave, categories, wallets, initial }) {
 }
 
 export default function Transactions() {
+  const { t } = useLang();
   const { data: transactions, loading, save, del } = useTransactions();
   const { data: categories } = useCategories();
   const { data: wallets }    = useWallets();
@@ -98,7 +99,7 @@ export default function Transactions() {
     <div className="page">
       <div className="page-header">
         <div>
-          <div className="page-title">Transactions</div>
+          <div className="page-title">{t('transactions')}</div>
           <div className="page-subtitle">{transactions.length} records</div>
         </div>
         <button className="btn btn-primary" onClick={() => setModal({})}>+ Add</button>
@@ -119,7 +120,7 @@ export default function Transactions() {
       {loading
         ? <div className="empty-state"><div className="empty-state-text">Loading…</div></div>
         : grouped.length === 0
-          ? <div className="empty-state"><div className="empty-state-icon">↕</div><div className="empty-state-text">No transactions found</div></div>
+          ? <div className="empty-state"><div className="empty-state-icon">↕</div><div className="empty-state-text">{t('no_tx_found')}</div></div>
           : grouped.map(([date, txs]) => (
               <div key={date} style={{ marginBottom:20 }}>
                 <div style={{ fontSize:12, color:'var(--text3)', fontWeight:500, textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:8 }}>{date}</div>

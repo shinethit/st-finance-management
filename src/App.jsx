@@ -1,6 +1,7 @@
 // src/App.jsx — Shine Thit · Clean Money Lover Style
 import { useState, useEffect, useRef } from 'react';
 import { AuthProvider, useAuth } from './lib/AuthContext';
+import { LangProvider, useLang } from './lib/LangContext';
 import Auth from './pages/Auth';
 import Dashboard from './pages/Dashboard';
 import Transactions from './pages/Transactions';
@@ -10,6 +11,7 @@ import Debts from './pages/Debts';
 import Vehicles from './pages/Vehicles';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
+import BulkEntry from './pages/BulkEntry';
 import Admin from './pages/Admin';
 import './App.css';
 
@@ -32,24 +34,26 @@ const Icons = {
   settings:     () => <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
   search:       () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
   bell:         () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
+  bulk:         () => <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>,
   logout:       () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
 };
 
 const NAV = [
-  { id:'dashboard',    label:'Dashboard',    icon:'dashboard' },
-  { id:'transactions', label:'Transactions', icon:'transactions' },
-  { id:'budget',       label:'Budget',       icon:'budget' },
-  { id:'savings',      label:'Savings',      icon:'savings' },
-  { id:'debts',        label:'Debts',        icon:'debts' },
-  { id:'vehicles',     label:'Vehicles',     icon:'vehicles' },
-  { id:'reports',      label:'Reports',      icon:'reports' },
-  { id:'settings',     label:'Settings',     icon:'settings' },
+  { id:'dashboard',    labelKey:'nav_dashboard',    icon:'dashboard' },
+  { id:'transactions', labelKey:'nav_transactions', icon:'transactions' },
+  { id:'budget',       labelKey:'nav_budget',       icon:'budget' },
+  { id:'savings',      labelKey:'nav_savings',      icon:'savings' },
+  { id:'debts',        labelKey:'nav_debts',        icon:'debts' },
+  { id:'vehicles',     labelKey:'nav_vehicles',     icon:'vehicles' },
+  { id:'bulk',         labelKey:'nav_bulk',         icon:'bulk' },
+  { id:'reports',      labelKey:'nav_reports',      icon:'reports' },
+  { id:'settings',     labelKey:'nav_settings',     icon:'settings' },
 ];
 
 const PAGES = {
   dashboard:Dashboard, transactions:Transactions, budget:Budget,
   savings:Savings, debts:Debts, vehicles:Vehicles,
-  reports:Reports, settings:Settings,
+  reports:Reports, settings:Settings, bulk:BulkEntry,
 };
 
 // ── Search Overlay ─────────────────────────────────────────────
@@ -67,7 +71,7 @@ function SearchOverlay({ onClose }) {
         <div className="search-input-row">
           <Icons.search />
           <input autoFocus value={q} onChange={e => setQ(e.target.value)}
-            placeholder="Search transactions, categories…" />
+            placeholder={t('search') + ' transactions, categories…'} />
           <button onClick={onClose} className="btn btn-ghost btn-sm">ESC</button>
         </div>
         {!q && (
@@ -98,7 +102,7 @@ function NotifDropdown({ onClose }) {
   return (
     <div ref={ref} className="notif-dropdown">
       <div className="notif-header">
-        <span>Notifications</span>
+        <span>{t('search')}</span>
         <button className="btn btn-ghost btn-sm">Clear all</button>
       </div>
       {notifs.map((n,i) => (
@@ -118,6 +122,7 @@ function NotifDropdown({ onClose }) {
 // ── App ────────────────────────────────────────────────────────
 function AppInner() {
   const { user, loading, signOut, profile } = useAuth();
+  const { t } = useLang();
   const [page, setPage]         = useState('dashboard');
   const [theme, setTheme]       = useState('dark');
   const [searchOpen, setSearch] = useState(false);
@@ -179,7 +184,7 @@ function AppInner() {
               <button key={item.id} className={`nav-item ${page===item.id?'active':''}`}
                 onClick={() => navigateTo(item.id)}>
                 <div className="nav-icon-box"><IC /></div>
-                <span style={{ flex:1, fontSize:13 }}>{item.label}</span>
+                <span style={{ flex:1, fontSize:13 }}>{t(item.labelKey)}</span>
               </button>
             );
           })}
@@ -198,7 +203,7 @@ function AppInner() {
       <main className="main-content">
         <div className="top-header">
           <div>
-            <div className="top-header-title">{currentNav?.label}</div>
+            <div className="top-header-title">{t(currentNav?.labelKey)}</div>
             <div className="top-header-sub">
               {new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' })}
             </div>
@@ -270,12 +275,9 @@ function AppInner() {
 }
 
 export default function App() {
-  // Simple URL-based routing
+  // Simple URL-based routing for admin
   if (window.location.pathname === '/admin') {
-    return <Admin />;
+    return <LangProvider><Admin /></LangProvider>;
   }
-  if (window.location.pathname === '/reset-password') {
-    return <AuthProvider><Auth /></AuthProvider>;
-  }
-  return <AuthProvider><AppInner /></AuthProvider>;
+  return <LangProvider><AuthProvider><AppInner /></AuthProvider></LangProvider>;
 }
