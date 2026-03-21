@@ -93,25 +93,78 @@ function SearchOverlay({ onClose }) {
 // ── Notifications Dropdown ─────────────────────────────────────
 function NotifDropdown({ onClose }) {
   const ref = useRef(null);
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     const fn = e => { if (ref.current && !ref.current.contains(e.target)) onClose(); };
     setTimeout(() => document.addEventListener('mousedown', fn), 0);
     return () => document.removeEventListener('mousedown', fn);
   }, [onClose]);
 
-  const notifs = [
-    { icon:'⚠️', bg:'rgba(251,191,36,0.12)', title:'Budget Alert', body:'Food & Drink at 90% of limit', time:'2h ago' },
-    { icon:'🚗', bg:'rgba(255,107,53,0.12)', title:'Vehicle Reminder', body:'Oil change due next week', time:'Yesterday' },
-    { icon:'💸', bg:'rgba(96,165,250,0.12)', title:'Debt Due Soon', body:'Payment due in 3 days', time:'2 days ago' },
-  ];
+  useEffect(() => {
+    (async () => {
+      const notifs = [];
+      const today = new Date().toISOString().slice(0,10);
+      const in7   = new Date(Date.now()+7*86400000).toISOString().slice(0,10);
+
+      // Announcements
+      const { data: anns } = await supabase
+        .from('announcements').select('*').eq('is_active',true).limit(3);
+      (anns||[]).forEach(a => notifs.push({
+        icon: a.type==='warning'?'⚠️':a.type==='error'?'🚨':a.type==='success'?'✅':'ℹ️',
+        bg:   a.type==='warning'?'rgba(251,191,36,0.12)':'rgba(96,165,250,0.12)',
+        title: a.title, body: a.body, time: 'Admin',
+      }));
+
+      // Debts due soon
+      const { data: debts } = await supabase
+        .from('debts').select('contact_name,direction,due_date,total_amount,paid_amount')
+        .eq('status','active').lte('due_date', in7).gte('due_date', today).limit(3);
+      (debts||[]).forEach(d => notifs.push({
+        icon:'💸', bg:'rgba(251,113,133,0.12)',
+        title: d.direction==='borrow'?'Debt Due Soon':'Payment Expected',
+        body:  `${d.contact_name} — K ${new Intl.NumberFormat().format(Number(d.total_amount)-Number(d.paid_amount))} remaining`,
+        time:  d.due_date,
+      }));
+
+      // Budget alerts (>80%)
+      const thisMonth = new Date().toISOString().slice(0,7);
+      const { data: budgets } = await supabase
+        .from('budgets').select('*,category:categories(name,icon)').limit(10);
+      const { data: txs } = await supabase
+        .from('transactions').select('amount,category_id').eq('type','expense')
+        .gte('date', thisMonth+'-01').lte('date', thisMonth+'-31');
+      (budgets||[]).forEach(b => {
+        if (!b.amount) return;
+        const spent = (txs||[])
+          .filter(t => !b.category_id || t.category_id===b.category_id)
+          .reduce((s,t)=>s+Number(t.amount),0);
+        const pct = spent/Number(b.amount)*100;
+        if (pct >= 80) notifs.push({
+          icon:'📊', bg:'rgba(251,191,36,0.12)',
+          title:`Budget Alert: ${b.name}`,
+          body: `${Math.round(pct)}% used this month`,
+          time: 'Budget',
+        });
+      });
+
+      setItems(notifs);
+      setLoading(false);
+    })();
+  }, []);
 
   return (
     <div ref={ref} className="notif-dropdown">
       <div className="notif-header">
         <span>Notifications</span>
-        <button className="btn btn-ghost btn-sm">Clear all</button>
+        <span style={{fontSize:11,color:'var(--text3)'}}>{items.length} items</span>
       </div>
-      {notifs.map((n,i) => (
+      {loading ? (
+        <div style={{textAlign:'center',padding:20,color:'var(--text3)',fontSize:13}}>Loading…</div>
+      ) : items.length === 0 ? (
+        <div style={{textAlign:'center',padding:20,color:'var(--text3)',fontSize:13}}>No notifications</div>
+      ) : items.map((n,i) => (
         <div key={i} className="notif-item">
           <div className="notif-icon" style={{ background:n.bg }}>{n.icon}</div>
           <div style={{ flex:1 }}>
@@ -289,7 +342,7 @@ function AppInner() {
           <div className="mob-icon"><Icons.dashboard /></div>
           <span className="mobile-nav-label">{t('nav_dashboard')}</span>
         </button>
-        <button className={`mobile-nav-item ${['transactions','bulk'].includes(page)?'active':''}`} onClick={() => navigateTo('transactions')}>
+        <button className={`mobile-nav-item ${page==='transactions'?'active':''}`} onClick={() => navigateTo('transactions')}>
           <div className="mob-icon"><Icons.transactions /></div>
           <span className="mobile-nav-label">{t('nav_transactions')}</span>
         </button>
@@ -298,11 +351,11 @@ function AppInner() {
           <button className="mob-fab" onClick={() => navigateTo('bulk')}>＋</button>
           <span className="mob-fab-label">{t('add')}</span>
         </div>
-        <button className={`mobile-nav-item ${['budget','savings','debts'].includes(page)?'active':''}`} onClick={() => navigateTo('budget')}>
-          <div className="mob-icon"><Icons.budget /></div>
-          <span className="mobile-nav-label">{t('nav_budget')}</span>
+        <button className={`mobile-nav-item ${page==='reports'?'active':''}`} onClick={() => navigateTo('reports')}>
+          <div className="mob-icon"><Icons.reports /></div>
+          <span className="mobile-nav-label">{t('nav_reports')}</span>
         </button>
-        <button className={`mobile-nav-item ${['settings','reports','analytics','vehicles'].includes(page)?'active':''}`} onClick={() => navigateTo('settings')}>
+        <button className={`mobile-nav-item ${page==='settings'?'active':''}`} onClick={() => navigateTo('settings')}>
           <div className="mob-icon"><Icons.settings /></div>
           <span className="mobile-nav-label">{t('nav_settings')}</span>
         </button>

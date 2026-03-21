@@ -661,6 +661,7 @@ body {
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
+    padding-top: 0;   /* content starts exactly at header bottom */
   }
 
   /* ── Fixed bottom navigation ── */
@@ -767,6 +768,12 @@ body {
   .page {
     padding: 16px 14px 24px;
     max-width: 100%;
+    padding-top: 16px;   /* extra clearance handled by main-content top offset */
+  }
+
+  /* First child spacing inside scrollable area */
+  .main-content > * {
+    /* nothing needed — offset handled by fixed positioning */
   }
 
   .page-header {
