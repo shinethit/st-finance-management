@@ -1,11 +1,13 @@
 // src/pages/Transactions.jsx — Supabase version
 import { useState, useMemo } from 'react';
+import { useLang } from '../lib/LangContext';
 import { useTransactions, useCategories, useWallets } from '../hooks/useData';
 
 const fmt = n => new Intl.NumberFormat('en-US').format(Math.abs(Number(n) || 0));
 const today = () => new Date().toISOString().slice(0, 10);
 
 function TxModal({ onClose, onSave, categories, wallets, initial }) {
+  const { t } = useLang();
   const [form, setForm] = useState({
     type: 'expense', amount: '',
     category_id: '', wallet_id: wallets[0]?.id || '',

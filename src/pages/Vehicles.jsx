@@ -1,4 +1,5 @@
 // src/pages/Vehicles.jsx — Supabase version (snake_case fields)
+import { useLang } from '../lib/LangContext';
 import { useState } from 'react';
 import { useVehicles, useVehicleExpenses, useReminders } from '../hooks/useData';
 
@@ -13,6 +14,7 @@ const TYPE_ICONS     = { Car:'🚗', Motorcycle:'🏍️', Truck:'🚛', Van:'�
 const EXP_ICONS      = { Fuel:'⛽', Service:'🔧', Wash:'💧', Tyre:'🔘', Insurance:'🛡️', Tax:'📋', Fine:'⚠️', Parking:'🅿️', Other:'📦' };
 
 function VehicleModal({ onClose, onSave, initial }) {
+  const { t } = useLang();
   const [form, setForm] = useState({
     name: '', brand: '', model: '', year: '',
     plate: '', type: 'Car', odometer: '',
@@ -88,6 +90,7 @@ function VehicleModal({ onClose, onSave, initial }) {
 }
 
 function ExpenseModal({ vehicleId, onClose, onSave, initial }) {
+  const { t } = useLang();
   const [form, setForm] = useState({
     vehicle_id: vehicleId, type: t('fuel'),
     amount: '', odometer: '', liters: '',
@@ -165,6 +168,7 @@ function ExpenseModal({ vehicleId, onClose, onSave, initial }) {
 }
 
 function ReminderModal({ vehicleId, onClose, onSave, initial }) {
+  const { t } = useLang();
   const [form, setForm] = useState({
     vehicle_id: vehicleId, type: 'Oil Change',
     title: '', due_date: '', due_odometer: '',
@@ -220,6 +224,7 @@ function ReminderModal({ vehicleId, onClose, onSave, initial }) {
 }
 
 function VehicleDetail({ vehicle, onBack, onEdit }) {
+  const { t } = useLang();
   const { data: expenses, save: saveExpense, del: delExpense } = useVehicleExpenses(vehicle.id);
   const { data: reminders, save: saveReminder, del: delReminder, markDone } = useReminders(vehicle.id);
   const [tab, setTab]         = useState('expenses');

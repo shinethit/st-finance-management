@@ -7,6 +7,7 @@ const today = () => new Date().toISOString().slice(0,10);
 
 // ── Add/Edit Modal ────────────────────────────────────────────
 function DebtModal({ onClose, onSave, initial }) {
+  const { t } = useLang();
   const [form, setForm] = useState({
     direction: 'lend',
     contact_name: '', contact_phone: '',
@@ -97,6 +98,7 @@ function DebtModal({ onClose, onSave, initial }) {
 
 // ── Payment Modal ─────────────────────────────────────────────
 function PaymentModal({ debt, onClose, onPay }) {
+  const { t } = useLang();
   const [amount, setAmount] = useState('');
   const [note, setNote]     = useState('');
   const remaining = Number(debt.total_amount) - Number(debt.paid_amount);
@@ -159,6 +161,7 @@ function PaymentModal({ debt, onClose, onPay }) {
 
 // ── Debt Card ─────────────────────────────────────────────────
 function DebtCard({ debt, onEdit, onDelete, onPay }) {
+  const { t } = useLang();
   const [expanded, setExpanded] = useState(false);
   const remaining = Number(debt.total_amount) - Number(debt.paid_amount);
   const pct       = Math.min(100,(Number(debt.paid_amount)/Number(debt.total_amount))*100);

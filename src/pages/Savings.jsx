@@ -7,6 +7,7 @@ const ICONS  = ['🏠','🚗','✈️','💍','🎓','💻','📱','🏋️','�
 const COLORS = ['#7c6aff','#22c55e','#3b82f6','#f59e0b','#ef4444','#14b8a6','#ec4899','#8b5cf6'];
 
 function SavingsModal({ onClose, onSave, initial }) {
+  const { t } = useLang();
   const [form, setForm] = useState({
     name:'', target_amount:'', current_amount:'0',
     icon:'🎯', color:'#7c6aff', deadline:'',
@@ -75,6 +76,7 @@ function SavingsModal({ onClose, onSave, initial }) {
 }
 
 function AddModal({ goal, onClose, onSave }) {
+  const { t } = useLang();
   const [amount, setAmount] = useState('');
   return (
     <div className="modal-overlay" onClick={onClose}>

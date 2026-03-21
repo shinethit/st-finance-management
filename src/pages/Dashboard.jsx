@@ -47,6 +47,7 @@ function MiniChart({ data }) {
 }
 
 function TrendChart() {
+  const { t } = useLang();
   const [data, setData] = useState([]);
 
   useEffect(() => {
@@ -107,6 +108,7 @@ function TrendChart() {
 
 // ── Dashboard ─────────────────────────────────────────────────
 export default function Dashboard({ onNavigate }) {
+  const { t } = useLang();
   const { summary:s, loading } = useDashboard();
   const { data:wallets }       = useWallets();
 

@@ -1,5 +1,6 @@
 // src/pages/Admin.jsx — Shine Thit Admin Panel
 import { useState, useEffect, useCallback } from 'react';
+import { useLang } from '../lib/LangContext';
 import { supabase } from '../lib/supabase';
 import Logo from '../lib/Logo';
 
@@ -537,6 +538,7 @@ function AnalyticsTab() {
 
 // ── Main Admin ─────────────────────────────────────────────────
 export default function Admin() {
+  const { t } = useLang();
   const [authed, setAuthed]               = useState(!!sessionStorage.getItem('admin_auth'));
   const [tab, setTab]                     = useState('overview');
   const [stats, setStats]                 = useState(null);

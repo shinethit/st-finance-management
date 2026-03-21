@@ -155,6 +155,7 @@ function CategoryModal({ onClose, onSave, initial }) {
 }
 
 export default function Budget() {
+  const { t } = useLang();
   const { data: budgets, monthIncome, save: saveBudget, del: delBudget } = useBudgets();
   const { data: categories, saveCategory, del: delCategory } = useCategories();
   const { data: transactions } = useTransactions();
