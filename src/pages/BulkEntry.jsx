@@ -333,7 +333,8 @@ export default function BulkEntry() {
         wallet_id:   walletId || null,
         date,
       }));
-      await supabase.from('transactions').insert(inserts);
+      const { error: insertErr } = await supabase.from('transactions').insert(inserts);
+      if (insertErr) { console.error('BulkEntry save error:', insertErr); setSaving(false); return; }
       setSaved(true);
       setRows([newRow(walletId, defCat)]);
       setTimeout(() => setSaved(false), 2500);

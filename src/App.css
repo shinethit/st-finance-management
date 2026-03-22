@@ -646,6 +646,12 @@ body {
 .divider { height: 1px; background: var(--border); margin: 8px 0; }
 
 /* ── MOBILE NAV ─────────────────────────────── */
+
+/* ── Floating Action Button ── */
+.tx-fab {
+  bottom: 28px;   /* desktop default — no nav bar */
+}
+
 @media (max-width: 768px) {
 
   html, body, #root {

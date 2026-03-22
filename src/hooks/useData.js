@@ -61,10 +61,21 @@ export function useTransactions(filters = {}) {
 
   const save = useCallback(async (item) => {
     const isNew = !item.id;
+    // Only send DB-schema fields — strip UI-only fields
+    const FIELDS = ['id','user_id','wallet_id','category_id','vehicle_id','debt_id',
+      'type','sub_type','amount','currency','note','date',
+      'odometer','liters','price_per_liter','station','expense_type'];
+    const payload = {};
+    FIELDS.forEach(f => { if (item[f] !== undefined) payload[f] = item[f]; });
+    if (!isNew) payload.id = item.id;
+
     const { data: row, error } = isNew
-      ? await db.insert('transactions', item)
-      : await db.update('transactions', item.id, item);
-    if (error) throw error;
+      ? await db.insert('transactions', payload)
+      : await db.update('transactions', item.id, payload);
+    if (error) {
+      console.error('Transaction save error:', error);
+      throw error;
+    }
     await load();
     return row;
   }, [load]);

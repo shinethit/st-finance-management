@@ -42,7 +42,7 @@ function CatPickerModal({ categories, value, type, onSelect, onClose }) {
 }
 
 // ── Transaction Form Modal ────────────────────────────────────
-function TxModal({ onClose, onSave, categories, wallets, initial }) {
+function TxModal({ onClose, onSave, onDelete, categories, wallets, initial }) {
   const { t } = useLang();
   const [form, setForm] = useState({
     type: 'expense', amount: '',
@@ -52,6 +52,8 @@ function TxModal({ onClose, onSave, categories, wallets, initial }) {
     ...initial,
   });
   const [showCatPicker, setShowCatPicker] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveErr, setSaveErr] = useState('');
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
   // Bidirectional: price×qty=total | total÷qty=price | total÷price=qty
@@ -200,15 +202,27 @@ function TxModal({ onClose, onSave, categories, wallets, initial }) {
             </div>
           )}
 
+          {saveErr && (
+            <div style={{ fontSize:12, color:'var(--red)', padding:'8px 12px',
+              background:'rgba(251,113,133,0.1)', borderRadius:8 }}>
+              ⚠ {saveErr}
+            </div>
+          )}
           <div className="modal-actions">
             <button className="btn btn-secondary" onClick={onClose}>{t('cancel')}</button>
-            <button className="btn btn-primary" disabled={!isValid}
-              onClick={() => {
+            <button className="btn btn-primary" disabled={!isValid || saving}
+              onClick={async () => {
                 if (!isValid) return;
-                onSave({ ...form, amount: Number(form.amount) });
-                onClose();
+                setSaving(true); setSaveErr('');
+                try {
+                  await onSave({ ...form, amount: Number(form.amount) });
+                  onClose();
+                } catch(e) {
+                  setSaveErr(e.message || 'Save မအောင်မြင်ဘူး');
+                  setSaving(false);
+                }
               }}>
-              {t('save')}
+              {saving ? 'Saving…' : t('save')}
             </button>
           </div>
         </div>
@@ -271,9 +285,6 @@ export default function Transactions() {
     <div className="page">
       <div className="page-header">
         <div className="page-title">{t('transactions')}</div>
-        <button className="btn btn-primary" onClick={() => setModal({})}>
-          + {t('add')}
-        </button>
       </div>
 
       {/* Filter tabs */}
@@ -359,10 +370,36 @@ export default function Transactions() {
         </div>
       ))}
 
+      {/* ── Floating Add Button ── */}
+      <button
+        onClick={() => setModal({})}
+        style={{
+          position: 'fixed',
+          bottom: 'calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px)',
+          right: 24,
+          width: 56, height: 56,
+          borderRadius: '50%',
+          background: 'linear-gradient(135deg, var(--accent), var(--accent2))',
+          border: 'none',
+          boxShadow: '0 6px 20px rgba(255,107,53,0.5)',
+          cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 28, color: '#fff',
+          zIndex: 40,
+          transition: 'transform .15s, box-shadow .15s',
+        }}
+        onMouseEnter={e => { e.currentTarget.style.transform='scale(1.08)'; e.currentTarget.style.boxShadow='0 8px 28px rgba(255,107,53,0.6)'; }}
+        onMouseLeave={e => { e.currentTarget.style.transform='scale(1)';    e.currentTarget.style.boxShadow='0 6px 20px rgba(255,107,53,0.5)'; }}
+        onMouseDown={e =>  { e.currentTarget.style.transform='scale(0.94)'; }}
+        onMouseUp={e =>    { e.currentTarget.style.transform='scale(1.08)'; }}
+        title="Add Transaction"
+      >＋</button>
+
       {modal !== null && (
         <TxModal
           onClose={() => setModal(null)}
           onSave={item => save({ ...item, sub_type: item.sub_type||'general' })}
+          onDelete={id => del(id)}
           categories={categories}
           wallets={wallets}
           initial={modal}
