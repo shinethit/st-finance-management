@@ -91,9 +91,9 @@ function ItemRow({ row, categories, onChange, onRemove, onNoteChange, expenseCat
         color:'var(--text3)', fontSize:18, lineHeight:1, padding:4,
       }}>✕</button>
 
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:10 }}>
+      <div style={{ display:'flex', flexDirection:'column', gap:10, marginBottom:10 }}>
         {/* Item name + auto-suggest */}
-        <div className="form-group" style={{ position:'relative', gridColumn:'1/-1' }}>
+        <div className="form-group" style={{ position:'relative' }}>
           <label className="form-label">ပစ္စည်းအမည်</label>
           <input
             ref={inputRef}
@@ -119,7 +119,7 @@ function ItemRow({ row, categories, onChange, onRemove, onNoteChange, expenseCat
         </div>
 
         {/* Category */}
-        <div className="form-group">
+        <div className="form-group" style={{ marginBottom:0 }}>
           <label className="form-label">အမျိုးအစား</label>
           <select className="form-select" value={row.category_id}
             onChange={e => setField('category_id', e.target.value)}>
@@ -128,8 +128,9 @@ function ItemRow({ row, categories, onChange, onRemove, onNoteChange, expenseCat
           </select>
         </div>
 
-        {/* Unit price */}
-        <div className="form-group">
+        {/* Unit price + Qty side by side */}
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
+        <div className="form-group" style={{ marginBottom:0 }}>
           <label className="form-label">တစ်ခုဈေး</label>
           <input className="form-input" type="number" placeholder="0"
             value={row.unit_price}
@@ -150,8 +151,9 @@ function ItemRow({ row, categories, onChange, onRemove, onNoteChange, expenseCat
           </div>
         </div>
 
+        </div>{/* end price+qty grid */}
         {/* Total */}
-        <div className="form-group">
+        <div className="form-group" style={{ marginBottom:0 }}>
           <label className="form-label" style={{ display:'flex', justifyContent:'space-between' }}>
             <span>စုစုပေါင်း</span>
             {row.unit_price && row.qty > 1 && (
