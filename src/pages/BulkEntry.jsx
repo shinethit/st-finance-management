@@ -1,6 +1,7 @@
 // src/pages/BulkEntry.jsx — Bulk Expense Entry with Auto-suggest + Price Compare
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useCategories, useWallets } from '../hooks/useData';
+import CategoryPicker from '../lib/CategoryPicker';
 import { useLang } from '../lib/LangContext';
 import { supabase } from '../lib/supabase';
 
@@ -19,7 +20,8 @@ function newRow(walletId, catId) {
     prevPrice:  null,
     prevDate:   null,
     suggestions: [],
-    showSug:    false,
+    showSug:     false,
+    showCatPicker: false,
   };
 }
 
@@ -118,14 +120,50 @@ function ItemRow({ row, categories, onChange, onRemove, onNoteChange, expenseCat
           }} />}
         </div>
 
-        {/* Category */}
+        {/* Category — tap to open picker */}
         <div className="form-group" style={{ marginBottom:0 }}>
           <label className="form-label">အမျိုးအစား</label>
-          <select className="form-select" value={row.category_id}
-            onChange={e => setField('category_id', e.target.value)}>
-            <option value="">— ရွေးပါ —</option>
-            {expenseCats.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
-          </select>
+          {!row.showCatPicker ? (
+            <button onClick={() => onChange({ ...row, showCatPicker: true })}
+              style={{ width:'100%', display:'flex', alignItems:'center', gap:10,
+                padding:'9px 12px', borderRadius:10,
+                border:'1px solid var(--border)', background:'var(--bg3)',
+                cursor:'pointer', fontFamily:'var(--font)' }}>
+              {(() => {
+                const cat = expenseCats.find(c => c.id === row.category_id);
+                return cat ? (
+                  <>
+                    <span style={{ fontSize:18 }}>{cat.icon}</span>
+                    <span style={{ flex:1, fontSize:13, fontWeight:600, textAlign:'left', color:'var(--text)' }}>{cat.name}</span>
+                    <span style={{ color:'var(--text3)', fontSize:12 }}>✎</span>
+                  </>
+                ) : (
+                  <>
+                    <span style={{ fontSize:16 }}>📂</span>
+                    <span style={{ flex:1, fontSize:13, color:'var(--text3)', textAlign:'left' }}>— ရွေးပါ —</span>
+                    <span style={{ color:'var(--text3)' }}>›</span>
+                  </>
+                );
+              })()}
+            </button>
+          ) : (
+            <div style={{ background:'var(--bg2)', borderRadius:12, padding:10,
+              border:'1px solid var(--border)', height:320, display:'flex', flexDirection:'column' }}>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
+                <span style={{ fontSize:12, fontWeight:700, color:'var(--text3)' }}>Category ရွေးမည်</span>
+                <button onClick={() => onChange({ ...row, showCatPicker: false })}
+                  style={{ background:'none', border:'none', cursor:'pointer', color:'var(--text3)', fontSize:16 }}>✕</button>
+              </div>
+              <div style={{ flex:1, overflow:'hidden', display:'flex', flexDirection:'column', minHeight:0 }}>
+                <CategoryPicker
+                  categories={expenseCats}
+                  value={row.category_id}
+                  type="expense"
+                  onChange={id => onChange({ ...row, category_id: id, showCatPicker: false })}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Unit price + Qty side by side */}
