@@ -43,7 +43,12 @@ export const db = {
     if (query.limit) q = q.limit(query.limit);
     return q;
   },
-  insert:       (table, data)     => supabase.from(table).insert(data).select().single(),
+  insert: async (table, data) => {
+    // Auto-inject user_id for RLS — get current session user
+    const { data: { user } } = await supabase.auth.getUser();
+    const payload = user && !data.user_id ? { ...data, user_id: user.id } : data;
+    return supabase.from(table).insert(payload).select().single();
+  },
   upsert:       (table, data)     => supabase.from(table).upsert(data).select().single(),
   update:       (table, id, data) => supabase.from(table).update({ ...data, updated_at: new Date().toISOString() }).eq('id', id).select().single(),
   delete:       (table, id)       => supabase.from(table).delete().eq('id', id),

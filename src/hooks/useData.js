@@ -61,12 +61,17 @@ export function useTransactions(filters = {}) {
 
   const save = useCallback(async (item) => {
     const isNew = !item.id;
+    // Get current user for RLS
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
     // Only send DB-schema fields — strip UI-only fields
     const FIELDS = ['id','user_id','wallet_id','category_id','vehicle_id','debt_id',
       'type','sub_type','amount','currency','note','date',
       'odometer','liters','price_per_liter','station','expense_type'];
     const payload = {};
     FIELDS.forEach(f => { if (item[f] !== undefined) payload[f] = item[f]; });
+    if (isNew) payload.user_id = user.id;  // always set user_id for new rows
     if (!isNew) payload.id = item.id;
 
     const { data: row, error } = isNew
