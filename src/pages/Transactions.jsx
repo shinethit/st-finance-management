@@ -47,7 +47,7 @@ function TxModal({ onClose, onSave, onDelete, categories, wallets, initial }) {
   const [form, setForm] = useState({
     type: 'expense', amount: '',
     category_id: '', wallet_id: wallets[0]?.id || '',
-    note: '', date: today(),
+    note: '', item_name: '', date: today(),
     unit_price: '', qty: '', total: '',
     ...initial,
   });
@@ -155,6 +155,18 @@ function TxModal({ onClose, onSave, onDelete, categories, wallets, initial }) {
             </div>
           )}
 
+          {/* Item / Description name */}
+          <div className="form-group">
+            <label className="form-label">
+              ပစ္စည်းအမည် / Description
+              <span style={{ color:'var(--text3)', fontSize:11, fontWeight:400, marginLeft:6 }}>(optional)</span>
+            </label>
+            <input className="form-input" type="text"
+              placeholder="ဥပမာ — ဆန်, ဆေး, မီတာ, Netflix…"
+              value={form.item_name}
+              onChange={e => set('item_name', e.target.value)} />
+          </div>
+
           {/* Category button */}
           <div className="form-group">
             <label className="form-label">{t('category')}</label>
@@ -191,8 +203,8 @@ function TxModal({ onClose, onSave, onDelete, categories, wallets, initial }) {
               value={form.note} onChange={e => set('note', e.target.value)} />
           </div>
 
-          {/* Wallet — only if multiple */}
-          {wallets.length > 1 && (
+          {/* Wallet */}
+          {wallets.length > 0 && (
             <div className="form-group">
               <label className="form-label">{t('wallet')}</label>
               <select className="form-select" value={form.wallet_id}
@@ -208,22 +220,35 @@ function TxModal({ onClose, onSave, onDelete, categories, wallets, initial }) {
               ⚠ {saveErr}
             </div>
           )}
-          <div className="modal-actions">
-            <button className="btn btn-secondary" onClick={onClose}>{t('cancel')}</button>
-            <button className="btn btn-primary" disabled={!isValid || saving}
-              onClick={async () => {
-                if (!isValid) return;
-                setSaving(true); setSaveErr('');
-                try {
-                  await onSave({ ...form, amount: Number(form.amount) });
-                  onClose();
-                } catch(e) {
-                  setSaveErr(e.message || 'Save မအောင်မြင်ဘူး');
-                  setSaving(false);
-                }
-              }}>
-              {saving ? 'Saving…' : t('save')}
-            </button>
+          <div className="modal-actions" style={{ justifyContent: initial?.id ? 'space-between' : 'flex-end' }}>
+            {initial?.id && onDelete && (
+              <button className="btn btn-danger btn-sm"
+                onClick={() => {
+                  if (window.confirm('ဤ transaction ကို ဖျက်မည်လား?')) {
+                    onDelete(initial.id);
+                    onClose();
+                  }
+                }}>
+                🗑 Delete
+              </button>
+            )}
+            <div style={{ display:'flex', gap:8 }}>
+              <button className="btn btn-secondary" onClick={onClose}>{t('cancel')}</button>
+              <button className="btn btn-primary" disabled={!isValid || saving}
+                onClick={async () => {
+                  if (!isValid) return;
+                  setSaving(true); setSaveErr('');
+                  try {
+                    await onSave({ ...form, amount: Number(form.amount), note: form.item_name || form.note || '' });
+                    onClose();
+                  } catch(e) {
+                    setSaveErr(e.message || 'Save မအောင်မြင်ဘူး');
+                    setSaving(false);
+                  }
+                }}>
+                {saving ? 'Saving…' : t('save')}
+              </button>
+            </div>
           </div>
         </div>
       </div>

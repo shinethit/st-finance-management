@@ -324,6 +324,10 @@ export default function BulkEntry() {
     if (!valid.length) return;
     setSaving(true);
     try {
+      // Get user for RLS
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setSaving(false); return; }
+
       const inserts = valid.map(r => ({
         type:        'expense',
         sub_type:    'general',
@@ -332,9 +336,17 @@ export default function BulkEntry() {
         category_id: r.category_id || null,
         wallet_id:   walletId || null,
         date,
+        user_id:     user.id,
       }));
       const { error: insertErr } = await supabase.from('transactions').insert(inserts);
       if (insertErr) { console.error('BulkEntry save error:', insertErr); setSaving(false); return; }
+
+      // Update wallet balance
+      if (walletId) {
+        const total = valid.reduce((s, r) => s + Number(r.total), 0);
+        const { data: w } = await supabase.from('wallets').select('balance').eq('id', walletId).single();
+        if (w) await supabase.from('wallets').update({ balance: Number(w.balance) - total }).eq('id', walletId);
+      }
       setSaved(true);
       setRows([newRow(walletId, defCat)]);
       setTimeout(() => setSaved(false), 2500);
