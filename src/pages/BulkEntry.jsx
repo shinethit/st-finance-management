@@ -60,21 +60,25 @@ function ItemRow({ row, categories, onChange, onRemove, onNoteChange, expenseCat
 
   const setField = (k, v) => onChange({ ...row, [k]: v });
 
-  const handleQtyOrPrice = (field, val) => {
-    const updated = { ...row, [field]: val };
-    const p = Number(updated.unit_price) || 0;
-    const q = Number(updated.qty)        || 0;
-    if (p && q) updated.total = String(p * q);
-    else if (field === 'total') updated.total = val;
+  // Full bidirectional calc
+  // price × qty = total  |  total ÷ qty = price  |  total ÷ price = qty
+  const calc = (updated) => {
+    const p = Number(updated.unit_price);
+    const q = Number(updated.qty);
+    const t = Number(updated.total);
+    if (p > 0 && q > 0)      updated.total      = String((p * q).toFixed(0));
+    else if (t > 0 && q > 0) updated.unit_price = String((t / q).toFixed(0));
+    else if (t > 0 && p > 0) updated.qty        = String(Math.round(t / p));
+    return updated;
+  };
+
+  const handleField = (field, val) => {
+    const updated = calc({ ...row, [field]: val });
     onChange(updated);
   };
 
-  const handleTotalDirect = val => {
-    const updated = { ...row, total: val };
-    const q = Number(updated.qty) || 1;
-    if (val && q) updated.unit_price = String((Number(val) / q).toFixed(0));
-    onChange(updated);
-  };
+  const handleQtyOrPrice  = (field, val) => handleField(field, val);
+  const handleTotalDirect = (val)        => handleField('total', val);
 
   const priceDiff = row.prevPrice && row.total
     ? Number(row.total) - Number(row.prevPrice)

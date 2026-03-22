@@ -172,6 +172,53 @@ export default function Dashboard({ onNavigate }) {
             <div style={{ fontFamily:'var(--mono)', fontSize:17, fontWeight:700, color:'var(--accent)' }}>-K {fmt(s?.monthExpense)}</div>
           </div>
         </div>
+
+        {/* ── Debt summary strip ── */}
+        {((s?.totalLent||0) > 0 || (s?.totalBorrowed||0) > 0) && (
+          <div style={{
+            display:'flex', gap:0, marginTop:18, paddingTop:16,
+            borderTop:'1px solid rgba(255,255,255,0.08)',
+          }}>
+            {(s?.totalLent||0) > 0 && (
+              <div style={{ flex:1, textAlign:'center' }}>
+                <div style={{ fontSize:10, fontWeight:700, color:'var(--blue)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:4 }}>
+                  💸 ချေးထား
+                </div>
+                <div style={{ fontFamily:'var(--mono)', fontSize:14, fontWeight:700, color:'var(--blue)' }}>
+                  K {fmt(s?.totalLent)}
+                </div>
+              </div>
+            )}
+            {(s?.totalLent||0) > 0 && (s?.totalBorrowed||0) > 0 && (
+              <div style={{ width:1, background:'rgba(255,255,255,0.08)' }}/>
+            )}
+            {(s?.totalBorrowed||0) > 0 && (
+              <div style={{ flex:1, textAlign:'center' }}>
+                <div style={{ fontSize:10, fontWeight:700, color:'var(--red)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:4 }}>
+                  🔴 ချေးယူ
+                </div>
+                <div style={{ fontFamily:'var(--mono)', fontSize:14, fontWeight:700, color:'var(--red)' }}>
+                  K {fmt(s?.totalBorrowed)}
+                </div>
+              </div>
+            )}
+            {/* Net debt position */}
+            {(s?.totalLent||0) > 0 && (s?.totalBorrowed||0) > 0 && (
+              <>
+                <div style={{ width:1, background:'rgba(255,255,255,0.08)' }}/>
+                <div style={{ flex:1, textAlign:'center' }}>
+                  <div style={{ fontSize:10, fontWeight:700, color:'var(--text3)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:4 }}>
+                    Net
+                  </div>
+                  <div style={{ fontFamily:'var(--mono)', fontSize:14, fontWeight:700,
+                    color: (s?.totalLent - s?.totalBorrowed) >= 0 ? 'var(--green)' : 'var(--red)' }}>
+                    {(s?.totalLent - s?.totalBorrowed) >= 0 ? '+' : '-'}K {fmt(Math.abs((s?.totalLent||0) - (s?.totalBorrowed||0)))}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       {/* ── Wallets ── */}

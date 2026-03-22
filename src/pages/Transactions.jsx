@@ -48,10 +48,24 @@ function TxModal({ onClose, onSave, categories, wallets, initial }) {
     type: 'expense', amount: '',
     category_id: '', wallet_id: wallets[0]?.id || '',
     note: '', date: today(),
+    unit_price: '', qty: '', total: '',
     ...initial,
   });
   const [showCatPicker, setShowCatPicker] = useState(false);
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
+
+  // Bidirectional: price×qty=total | total÷qty=price | total÷price=qty
+  const handleCalc = (field, val) => {
+    const updated = { ...form, [field]: val };
+    const p = Number(updated.unit_price);
+    const q = Number(updated.qty);
+    const t = Number(updated.total);
+    if (p > 0 && q > 0)      { updated.total      = String((p*q).toFixed(0)); updated.amount = String((p*q).toFixed(0)); }
+    else if (t > 0 && q > 0) { updated.unit_price = String((t/q).toFixed(0)); updated.amount = String(t); }
+    else if (t > 0 && p > 0) { updated.qty        = String(Math.round(t/p)); updated.amount = String(t); }
+    else if (field==='total' || field==='amount') { updated.amount = val; }
+    setForm(updated);
+  };
 
   const selCat = categories.find(c => c.id === form.category_id);
   const isValid = form.amount && Number(form.amount) > 0 && form.date;
@@ -79,15 +93,65 @@ function TxModal({ onClose, onSave, categories, wallets, initial }) {
             </button>
           </div>
 
-          {/* Amount */}
+          {/* Amount — big total display */}
           <div className="form-group">
-            <label className="form-label">{t('amount')}</label>
+            <label className="form-label" style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+              <span>{t('amount')}</span>
+              {form.unit_price && form.qty && (
+                <span style={{ fontSize:11, color:'var(--text3)', fontWeight:400 }}>
+                  K {fmt(Number(form.unit_price))} × {form.qty}
+                </span>
+              )}
+            </label>
             <input className="form-input" type="number" inputMode="decimal"
-              placeholder="0" value={form.amount}
-              onChange={e => set('amount', e.target.value)}
+              placeholder="0" value={form.total || form.amount}
+              onChange={e => handleCalc('total', e.target.value)}
               autoFocus
               style={{ fontSize:22, fontWeight:700, textAlign:'center' }} />
           </div>
+
+          {/* Unit Price + Qty (optional, for reverse calc) */}
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
+            <div className="form-group" style={{ marginBottom:0 }}>
+              <label className="form-label" style={{ fontSize:12 }}>
+                တစ်ခုဈေး <span style={{ color:'var(--text3)', fontWeight:400 }}>(optional)</span>
+              </label>
+              <input className="form-input" type="number" inputMode="decimal"
+                placeholder="0" value={form.unit_price}
+                onChange={e => handleCalc('unit_price', e.target.value)} />
+            </div>
+            <div className="form-group" style={{ marginBottom:0 }}>
+              <label className="form-label" style={{ fontSize:12 }}>
+                အရေအတွက် <span style={{ color:'var(--text3)', fontWeight:400 }}>(optional)</span>
+              </label>
+              <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+                <button onClick={() => handleCalc('qty', Math.max(1, Number(form.qty||1)-1))}
+                  style={{ width:32, height:38, borderRadius:8, border:'1px solid var(--border)',
+                    background:'var(--bg3)', cursor:'pointer', fontSize:18, color:'var(--text2)', flexShrink:0 }}>−</button>
+                <input className="form-input" type="number" inputMode="decimal"
+                  placeholder="1" value={form.qty}
+                  onChange={e => handleCalc('qty', e.target.value)}
+                  style={{ textAlign:'center', flex:1 }} />
+                <button onClick={() => handleCalc('qty', Number(form.qty||0)+1)}
+                  style={{ width:32, height:38, borderRadius:8, border:'1px solid var(--border)',
+                    background:'var(--bg3)', cursor:'pointer', fontSize:18, color:'var(--text2)', flexShrink:0 }}>＋</button>
+              </div>
+            </div>
+          </div>
+
+          {/* Reverse calc hint */}
+          {(form.unit_price || form.qty || form.total) && (
+            <div style={{ fontSize:11, color:'var(--text3)', padding:'6px 10px',
+              background:'var(--bg3)', borderRadius:8, textAlign:'center' }}>
+              {form.unit_price && form.qty && form.total
+                ? `K ${fmt(form.unit_price)} × ${form.qty} = K ${fmt(form.total)}`
+                : form.total && form.qty && !form.unit_price
+                ? `K ${fmt(form.total)} ÷ ${form.qty} = K ${fmt(Number(form.total)/Number(form.qty))} / ခု`
+                : form.total && form.unit_price && !form.qty
+                ? `K ${fmt(form.total)} ÷ K ${fmt(form.unit_price)} = ${Math.round(Number(form.total)/Number(form.unit_price))} ခု`
+                : ''}
+            </div>
+          )}
 
           {/* Category button */}
           <div className="form-group">
