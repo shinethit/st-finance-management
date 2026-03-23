@@ -1,6 +1,7 @@
 // src/App.jsx — Shine Thit · Clean Money Lover Style
 import { useState, useEffect, useRef } from 'react';
 import { AuthProvider, useAuth } from './lib/AuthContext';
+import { usePWAInstall } from './hooks/usePWAInstall';
 import { LangProvider, useLang } from './lib/LangContext';
 import Auth from './pages/Auth';
 import Dashboard from './pages/Dashboard';
@@ -193,6 +194,18 @@ function AppInner() {
   const [moreOpen,  setMoreOpen] = useState(false);
   const [announcements, setAnns] = useState([]);
 
+  // PWA install
+  const { prompt, installed, triggerInstall } = usePWAInstall();
+  const [bannerDismissed, setBannerDismissed] = useState(
+    () => localStorage.getItem('pwa_banner_dismissed') === '1'
+  );
+  const showBanner = !installed && prompt && !bannerDismissed;
+
+  const dismissBanner = () => {
+    setBannerDismissed(true);
+    localStorage.setItem('pwa_banner_dismissed', '1');
+  };
+
   // Load active announcements
   useEffect(() => {
     supabase.from('announcements').select('*')
@@ -342,6 +355,44 @@ function AppInner() {
             </div>
           </div>
         )}
+        {/* ── PWA Install Banner ── */}
+        {showBanner && (
+          <div style={{
+            margin: '0 0 12px 0',
+            padding: '14px 16px',
+            borderRadius: 14,
+            background: 'linear-gradient(135deg, rgba(255,107,53,0.15), rgba(200,134,10,0.15))',
+            border: '1px solid rgba(255,107,53,0.35)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+          }}>
+            <img src="/icons/icon-72.png" width={38} height={38}
+              style={{ borderRadius: 10, flexShrink: 0 }} alt="" />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 2 }}>
+                Shine Thit ကို Install လုပ်ပါ
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--text3)', lineHeight: 1.5 }}>
+                Home screen မှာ App အနေနဲ့ တိုက်ရိုက်ဖွင့်လို့ရမယ်
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={async () => { await triggerInstall(); }}>
+                Install
+              </button>
+              <button
+                className="btn btn-ghost btn-icon btn-sm"
+                style={{ color: 'var(--text3)' }}
+                onClick={dismissBanner}>
+                ✕
+              </button>
+            </div>
+          </div>
+        )}
+
         <PageComponent onNavigate={navigateTo} />
       </main>
 
