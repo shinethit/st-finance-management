@@ -351,13 +351,13 @@ function AppInner() {
           <div className="mob-icon"><Icons.dashboard /></div>
           <span className="mobile-nav-label">{t('nav_dashboard')}</span>
         </button>
-        <button className={`mobile-nav-item ${page==='bulk'?'active':''}`} onClick={() => navigateTo('bulk')}>
-          <div className="mob-icon"><Icons.bulk /></div>
-          <span className="mobile-nav-label">{t('nav_bulk')}</span>
+        <button className={`mobile-nav-item ${page==='transactions'?'active':''}`} onClick={() => navigateTo('transactions')}>
+          <div className="mob-icon"><Icons.transactions /></div>
+          <span className="mobile-nav-label">{t('nav_transactions')}</span>
         </button>
         <div className="mob-fab-wrap">
-          <button className="mob-fab" onClick={() => navigateTo('transactions')}>＋</button>
-          <span className="mob-fab-label">Trnx</span>
+          <button className="mob-fab" onClick={() => navigateTo('bulk')}>＋</button>
+          <span className="mob-fab-label">{t('add')}</span>
         </div>
         <button className={`mobile-nav-item ${page==='reports'?'active':''}`} onClick={() => navigateTo('reports')}>
           <div className="mob-icon"><Icons.reports /></div>

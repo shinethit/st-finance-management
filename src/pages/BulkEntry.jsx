@@ -1,7 +1,6 @@
 // src/pages/BulkEntry.jsx — Bulk Expense Entry with Auto-suggest + Price Compare
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useCategories, useWallets } from '../hooks/useData';
-import CategoryPicker from '../lib/CategoryPicker';
 import { useLang } from '../lib/LangContext';
 import { supabase } from '../lib/supabase';
 
@@ -20,8 +19,7 @@ function newRow(walletId, catId) {
     prevPrice:  null,
     prevDate:   null,
     suggestions: [],
-    showSug:     false,
-    showCatPicker: false,
+    showSug:    false,
   };
 }
 
@@ -60,25 +58,21 @@ function ItemRow({ row, categories, onChange, onRemove, onNoteChange, expenseCat
 
   const setField = (k, v) => onChange({ ...row, [k]: v });
 
-  // Full bidirectional calc
-  // price × qty = total  |  total ÷ qty = price  |  total ÷ price = qty
-  const calc = (updated) => {
-    const p = Number(updated.unit_price);
-    const q = Number(updated.qty);
-    const t = Number(updated.total);
-    if (p > 0 && q > 0)      updated.total      = String((p * q).toFixed(0));
-    else if (t > 0 && q > 0) updated.unit_price = String((t / q).toFixed(0));
-    else if (t > 0 && p > 0) updated.qty        = String(Math.round(t / p));
-    return updated;
-  };
-
-  const handleField = (field, val) => {
-    const updated = calc({ ...row, [field]: val });
+  const handleQtyOrPrice = (field, val) => {
+    const updated = { ...row, [field]: val };
+    const p = Number(updated.unit_price) || 0;
+    const q = Number(updated.qty)        || 0;
+    if (p && q) updated.total = String(p * q);
+    else if (field === 'total') updated.total = val;
     onChange(updated);
   };
 
-  const handleQtyOrPrice  = (field, val) => handleField(field, val);
-  const handleTotalDirect = (val)        => handleField('total', val);
+  const handleTotalDirect = val => {
+    const updated = { ...row, total: val };
+    const q = Number(updated.qty) || 1;
+    if (val && q) updated.unit_price = String((Number(val) / q).toFixed(0));
+    onChange(updated);
+  };
 
   const priceDiff = row.prevPrice && row.total
     ? Number(row.total) - Number(row.prevPrice)
@@ -97,9 +91,9 @@ function ItemRow({ row, categories, onChange, onRemove, onNoteChange, expenseCat
         color:'var(--text3)', fontSize:18, lineHeight:1, padding:4,
       }}>✕</button>
 
-      <div style={{ display:'flex', flexDirection:'column', gap:10, marginBottom:10 }}>
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:10 }}>
         {/* Item name + auto-suggest */}
-        <div className="form-group" style={{ position:'relative' }}>
+        <div className="form-group" style={{ position:'relative', gridColumn:'1/-1' }}>
           <label className="form-label">ပစ္စည်းအမည်</label>
           <input
             ref={inputRef}
@@ -124,55 +118,18 @@ function ItemRow({ row, categories, onChange, onRemove, onNoteChange, expenseCat
           }} />}
         </div>
 
-        {/* Category — tap to open picker */}
-        <div className="form-group" style={{ marginBottom:0 }}>
+        {/* Category */}
+        <div className="form-group">
           <label className="form-label">အမျိုးအစား</label>
-          {!row.showCatPicker ? (
-            <button onClick={() => onChange({ ...row, showCatPicker: true })}
-              style={{ width:'100%', display:'flex', alignItems:'center', gap:10,
-                padding:'9px 12px', borderRadius:10,
-                border:'1px solid var(--border)', background:'var(--bg3)',
-                cursor:'pointer', fontFamily:'var(--font)' }}>
-              {(() => {
-                const cat = expenseCats.find(c => c.id === row.category_id);
-                return cat ? (
-                  <>
-                    <span style={{ fontSize:18 }}>{cat.icon}</span>
-                    <span style={{ flex:1, fontSize:13, fontWeight:600, textAlign:'left', color:'var(--text)' }}>{cat.name}</span>
-                    <span style={{ color:'var(--text3)', fontSize:12 }}>✎</span>
-                  </>
-                ) : (
-                  <>
-                    <span style={{ fontSize:16 }}>📂</span>
-                    <span style={{ flex:1, fontSize:13, color:'var(--text3)', textAlign:'left' }}>— ရွေးပါ —</span>
-                    <span style={{ color:'var(--text3)' }}>›</span>
-                  </>
-                );
-              })()}
-            </button>
-          ) : (
-            <div style={{ background:'var(--bg2)', borderRadius:12, padding:10,
-              border:'1px solid var(--border)', height:320, display:'flex', flexDirection:'column' }}>
-              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
-                <span style={{ fontSize:12, fontWeight:700, color:'var(--text3)' }}>Category ရွေးမည်</span>
-                <button onClick={() => onChange({ ...row, showCatPicker: false })}
-                  style={{ background:'none', border:'none', cursor:'pointer', color:'var(--text3)', fontSize:16 }}>✕</button>
-              </div>
-              <div style={{ flex:1, overflow:'hidden', display:'flex', flexDirection:'column', minHeight:0 }}>
-                <CategoryPicker
-                  categories={expenseCats}
-                  value={row.category_id}
-                  type="expense"
-                  onChange={id => onChange({ ...row, category_id: id, showCatPicker: false })}
-                />
-              </div>
-            </div>
-          )}
+          <select className="form-select" value={row.category_id}
+            onChange={e => setField('category_id', e.target.value)}>
+            <option value="">— ရွေးပါ —</option>
+            {expenseCats.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
+          </select>
         </div>
 
-        {/* Unit price + Qty side by side */}
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
-        <div className="form-group" style={{ marginBottom:0 }}>
+        {/* Unit price */}
+        <div className="form-group">
           <label className="form-label">တစ်ခုဈေး</label>
           <input className="form-input" type="number" placeholder="0"
             value={row.unit_price}
@@ -193,9 +150,8 @@ function ItemRow({ row, categories, onChange, onRemove, onNoteChange, expenseCat
           </div>
         </div>
 
-        </div>{/* end price+qty grid */}
         {/* Total */}
-        <div className="form-group" style={{ marginBottom:0 }}>
+        <div className="form-group">
           <label className="form-label" style={{ display:'flex', justifyContent:'space-between' }}>
             <span>စုစုပေါင်း</span>
             {row.unit_price && row.qty > 1 && (
@@ -324,10 +280,6 @@ export default function BulkEntry() {
     if (!valid.length) return;
     setSaving(true);
     try {
-      // Get user for RLS
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setSaving(false); return; }
-
       const inserts = valid.map(r => ({
         type:        'expense',
         sub_type:    'general',
@@ -336,17 +288,8 @@ export default function BulkEntry() {
         category_id: r.category_id || null,
         wallet_id:   walletId || null,
         date,
-        user_id:     user.id,
       }));
-      const { error: insertErr } = await supabase.from('transactions').insert(inserts);
-      if (insertErr) { console.error('BulkEntry save error:', insertErr); setSaving(false); return; }
-
-      // Update wallet balance
-      if (walletId) {
-        const total = valid.reduce((s, r) => s + Number(r.total), 0);
-        const { data: w } = await supabase.from('wallets').select('balance').eq('id', walletId).single();
-        if (w) await supabase.from('wallets').update({ balance: Number(w.balance) - total }).eq('id', walletId);
-      }
+      await supabase.from('transactions').insert(inserts);
       setSaved(true);
       setRows([newRow(walletId, defCat)]);
       setTimeout(() => setSaved(false), 2500);

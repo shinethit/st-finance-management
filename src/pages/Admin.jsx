@@ -178,14 +178,32 @@ function AnnouncementModal({ onClose, onSave, initial }) {
 }
 
 // ── User Detail Modal ──────────────────────────────────────────
-function UserDetailModal({ user, onClose, onBlock, onUnblock }) {
-  const [txs, setTxs]     = useState([]);
-  const [loading, setLoading] = useState(true);
+function UserDetailModal({ user, onClose, onBlock, onUnblock, onDelete }) {
+  const [txs, setTxs]           = useState([]);
+  const [loading, setLoading]   = useState(true);
+  const [delConfirm, setDelConfirm] = useState(false);
+  const [deleting,  setDeleting]    = useState(false);
+  const [delError,  setDelError]    = useState('');
+
   useEffect(()=>{
     supabase.from('transactions').select('*,category:categories(name,icon)')
       .eq('user_id',user.id).order('date',{ascending:false}).limit(20)
       .then(({data})=>{ setTxs(data||[]); setLoading(false); });
   },[user.id]);
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    setDelError('');
+    try {
+      const { error } = await supabase.rpc('admin_delete_user', { target_user_id: user.id });
+      if (error) throw error;
+      onDelete(user.id);
+      onClose();
+    } catch(e) {
+      setDelError(e.message || 'Failed to delete user.');
+      setDeleting(false);
+    }
+  };
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e=>e.stopPropagation()} style={{ maxWidth:520 }}>
@@ -219,6 +237,31 @@ function UserDetailModal({ user, onClose, onBlock, onUnblock }) {
             : <button className="btn btn-danger btn-sm" onClick={()=>{ onBlock(user.id); onClose(); }}>Block</button>
           }
         </div>
+
+        {/* ── Delete Account (Danger Zone) ── */}
+        <div style={{ marginBottom:18, padding:'12px 14px', borderRadius:10, border:'1px solid rgba(251,113,133,0.35)', background:'rgba(251,113,133,0.05)' }}>
+          <div style={{ fontWeight:700, fontSize:13, color:'var(--red)', marginBottom:6 }}>🗑️ Delete This Account</div>
+          <div style={{ fontSize:12, color:'var(--text2)', marginBottom:10, lineHeight:1.6 }}>
+            Profile, transactions, categories, debts အကုန် ပျက်မယ်။ Wallet တွေကတော့ ကျန်မယ် (email ချိတ်ထားမယ်)။
+          </div>
+          {!delConfirm ? (
+            <button className="btn btn-danger btn-sm" onClick={()=>setDelConfirm(true)}>
+              Delete User Account
+            </button>
+          ) : (
+            <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+              <div style={{ fontSize:12, fontWeight:600, color:'var(--red)' }}>သေချာပြီလား? ဒါပြန်မရနိုင်ဘူး။</div>
+              {delError && <div style={{ fontSize:12, color:'var(--red)', background:'rgba(251,113,133,0.1)', padding:'6px 10px', borderRadius:6 }}>{delError}</div>}
+              <div style={{ display:'flex', gap:8 }}>
+                <button className="btn btn-secondary btn-sm" onClick={()=>{setDelConfirm(false);setDelError('');}} disabled={deleting}>Cancel</button>
+                <button className="btn btn-danger btn-sm" onClick={handleDelete} disabled={deleting}>
+                  {deleting ? 'Deleting…' : 'Yes, Delete'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
         <div style={{ fontSize:13, fontWeight:700, marginBottom:10 }}>Recent Transactions</div>
         {loading
           ? <div style={{ textAlign:'center', color:'var(--text3)', padding:20 }}>Loading…</div>
@@ -566,6 +609,7 @@ export default function Admin() {
 
   const blockUser   = async(id)=>{ await supabase.from('user_blocks').insert({user_id:id,reason:'Blocked by admin'}); loadData(); };
   const unblockUser = async(id)=>{ await supabase.from('user_blocks').delete().eq('user_id',id); loadData(); };
+  const deleteUser  = (id)=>{ setUsers(prev => prev.filter(u => u.id !== id)); loadData(); };
   const saveAnn     = async(form)=>{ if(form.id){ await supabase.from('announcements').update({...form,updated_at:new Date().toISOString()}).eq('id',form.id); } else { await supabase.from('announcements').insert(form); } loadData(); };
   const deleteAnn   = async(id)=>{ await supabase.from('announcements').delete().eq('id',id); loadData(); };
   const signOut     = ()=>{ sessionStorage.removeItem('admin_auth'); setAuthed(false); };
@@ -766,7 +810,7 @@ export default function Admin() {
         </div>
       </div>
 
-      {selectedUser && <UserDetailModal user={selectedUser} onClose={()=>setSelectedUser(null)} onBlock={blockUser} onUnblock={unblockUser} />}
+      {selectedUser && <UserDetailModal user={selectedUser} onClose={()=>setSelectedUser(null)} onBlock={blockUser} onUnblock={unblockUser} onDelete={deleteUser} />}
       {annModal !== null && <AnnouncementModal onClose={()=>setAnnModal(null)} onSave={saveAnn} initial={annModal} />}
     </div>
   );

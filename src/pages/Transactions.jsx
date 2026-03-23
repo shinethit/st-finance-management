@@ -14,21 +14,24 @@ function CatPickerModal({ categories, value, type, onSelect, onClose }) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()}
-        style={{ height: '88vh', display: 'flex', flexDirection: 'column' }}>
+        style={{ maxWidth: 480, height: '85vh', display: 'flex', flexDirection: 'column' }}>
         <div className="modal-header" style={{ flexShrink: 0 }}>
-          <div className="modal-title">Category ရွေးမည်</div>
+          <div className="modal-title">Select {t('category')}</div>
           <button className="btn btn-ghost btn-icon" onClick={onClose}>✕</button>
         </div>
         {selected && (
-          <div style={{ padding:'8px 14px', marginBottom:8, flexShrink:0,
-            background:'rgba(255,107,53,0.08)', borderRadius:10,
-            fontSize:13, display:'flex', alignItems:'center', gap:8 }}>
-            <span style={{ fontSize:18 }}>{selected.icon}</span>
-            <span style={{ fontWeight:600 }}>{selected.name}</span>
-            <span style={{ color:'var(--accent)', marginLeft:'auto' }}>✓</span>
+          <div style={{
+            margin: '0 0 12px', padding: '8px 14px',
+            background: 'rgba(255,107,53,0.08)', borderRadius: 10,
+            fontSize: 13, display: 'flex', alignItems: 'center', gap: 8,
+            flexShrink: 0,
+          }}>
+            <span>{selected.icon}</span>
+            <span style={{ fontWeight: 600 }}>{selected.name}</span>
+            <span style={{ color: 'var(--accent)', marginLeft: 'auto' }}>✓</span>
           </div>
         )}
-        <div style={{ flex:1, overflow:'hidden', display:'flex', flexDirection:'column', minHeight:0 }}>
+        <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           <CategoryPicker
             categories={categories}
             value={value}
@@ -42,35 +45,18 @@ function CatPickerModal({ categories, value, type, onSelect, onClose }) {
 }
 
 // ── Transaction Form Modal ────────────────────────────────────
-function TxModal({ onClose, onSave, onDelete, categories, wallets, initial }) {
+function TxModal({ onClose, onSave, categories, wallets, initial }) {
   const { t } = useLang();
   const [form, setForm] = useState({
     type: 'expense', amount: '',
     category_id: '', wallet_id: wallets[0]?.id || '',
-    note: '', item_name: '', date: today(),
-    unit_price: '', qty: '', total: '',
+    note: '', date: today(),
     ...initial,
   });
   const [showCatPicker, setShowCatPicker] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [saveErr, setSaveErr] = useState('');
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
-  // Bidirectional: price×qty=total | total÷qty=price | total÷price=qty
-  const handleCalc = (field, val) => {
-    const updated = { ...form, [field]: val };
-    const p = Number(updated.unit_price);
-    const q = Number(updated.qty);
-    const t = Number(updated.total);
-    if (p > 0 && q > 0)      { updated.total      = String((p*q).toFixed(0)); updated.amount = String((p*q).toFixed(0)); }
-    else if (t > 0 && q > 0) { updated.unit_price = String((t/q).toFixed(0)); updated.amount = String(t); }
-    else if (t > 0 && p > 0) { updated.qty        = String(Math.round(t/p)); updated.amount = String(t); }
-    else if (field==='total' || field==='amount') { updated.amount = val; }
-    setForm(updated);
-  };
-
   const selCat = categories.find(c => c.id === form.category_id);
-  const isValid = form.amount && Number(form.amount) > 0 && form.date;
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -81,126 +67,59 @@ function TxModal({ onClose, onSave, onDelete, categories, wallets, initial }) {
           </div>
           <button className="btn btn-ghost btn-icon" onClick={onClose}>✕</button>
         </div>
-
         <div className="modal-form">
           {/* Type toggle */}
           <div className="type-toggle">
             <button className={`type-btn expense ${form.type==='expense'?'active':''}`}
-              onClick={() => { set('type','expense'); set('category_id',''); }}>
-              {t('expense')}
-            </button>
-            <button className={`type-btn income ${form.type==='income'?'active':''}`}
-              onClick={() => { set('type','income'); set('category_id',''); }}>
-              {t('income')}
-            </button>
+              onClick={() => set('type','expense')}>{t('expense')}</button>
+            <button className={`type-btn income  ${form.type==='income' ?'active':''}`}
+              onClick={() => set('type','income')} >{t('income')}</button>
           </div>
 
-          {/* Amount — big total display */}
+          {/* Amount — big and prominent */}
           <div className="form-group">
-            <label className="form-label" style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-              <span>{t('amount')}</span>
-              {form.unit_price && form.qty && (
-                <span style={{ fontSize:11, color:'var(--text3)', fontWeight:400 }}>
-                  K {fmt(Number(form.unit_price))} × {form.qty}
-                </span>
-              )}
-            </label>
-            <input className="form-input" type="number" inputMode="decimal"
-              placeholder="0" value={form.total || form.amount}
-              onChange={e => handleCalc('total', e.target.value)}
+            <label className="form-label">{t('amount')}</label>
+            <input className="form-input" type="number" placeholder="0"
+              value={form.amount} onChange={e => set('amount', e.target.value)}
               autoFocus
-              style={{ fontSize:22, fontWeight:700, textAlign:'center' }} />
+              style={{ fontSize: 24, fontWeight: 700, textAlign: 'center', letterSpacing: -0.5 }} />
           </div>
 
-          {/* Unit Price + Qty (optional, for reverse calc) */}
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
-            <div className="form-group" style={{ marginBottom:0 }}>
-              <label className="form-label" style={{ fontSize:12 }}>
-                တစ်ခုဈေး <span style={{ color:'var(--text3)', fontWeight:400 }}>(optional)</span>
-              </label>
-              <input className="form-input" type="number" inputMode="decimal"
-                placeholder="0" value={form.unit_price}
-                onChange={e => handleCalc('unit_price', e.target.value)} />
-            </div>
-            <div className="form-group" style={{ marginBottom:0 }}>
-              <label className="form-label" style={{ fontSize:12 }}>
-                အရေအတွက် <span style={{ color:'var(--text3)', fontWeight:400 }}>(optional)</span>
-              </label>
-              <div style={{ display:'flex', alignItems:'center', gap:4 }}>
-                <button onClick={() => handleCalc('qty', Math.max(1, Number(form.qty||1)-1))}
-                  style={{ width:32, height:38, borderRadius:8, border:'1px solid var(--border)',
-                    background:'var(--bg3)', cursor:'pointer', fontSize:18, color:'var(--text2)', flexShrink:0 }}>−</button>
-                <input className="form-input" type="number" inputMode="decimal"
-                  placeholder="1" value={form.qty}
-                  onChange={e => handleCalc('qty', e.target.value)}
-                  style={{ textAlign:'center', flex:1 }} />
-                <button onClick={() => handleCalc('qty', Number(form.qty||0)+1)}
-                  style={{ width:32, height:38, borderRadius:8, border:'1px solid var(--border)',
-                    background:'var(--bg3)', cursor:'pointer', fontSize:18, color:'var(--text2)', flexShrink:0 }}>＋</button>
-              </div>
-            </div>
-          </div>
-
-          {/* Reverse calc hint */}
-          {(form.unit_price || form.qty || form.total) && (
-            <div style={{ fontSize:11, color:'var(--text3)', padding:'6px 10px',
-              background:'var(--bg3)', borderRadius:8, textAlign:'center' }}>
-              {form.unit_price && form.qty && form.total
-                ? `K ${fmt(form.unit_price)} × ${form.qty} = K ${fmt(form.total)}`
-                : form.total && form.qty && !form.unit_price
-                ? `K ${fmt(form.total)} ÷ ${form.qty} = K ${fmt(Number(form.total)/Number(form.qty))} / ခု`
-                : form.total && form.unit_price && !form.qty
-                ? `K ${fmt(form.total)} ÷ K ${fmt(form.unit_price)} = ${Math.round(Number(form.total)/Number(form.unit_price))} ခု`
-                : ''}
-            </div>
-          )}
-
-          {/* Item / Description name */}
-          <div className="form-group">
-            <label className="form-label">
-              ပစ္စည်းအမည် / Description
-              <span style={{ color:'var(--text3)', fontSize:11, fontWeight:400, marginLeft:6 }}>(optional)</span>
-            </label>
-            <input className="form-input" type="text"
-              placeholder="ဥပမာ — ဆန်, ဆေး, မီတာ, Netflix…"
-              value={form.item_name}
-              onChange={e => set('item_name', e.target.value)} />
-          </div>
-
-          {/* Category button */}
+          {/* Category — tap to open picker */}
           <div className="form-group">
             <label className="form-label">{t('category')}</label>
             <button onClick={() => setShowCatPicker(true)}
-              style={{ width:'100%', display:'flex', alignItems:'center', gap:12,
-                padding:'11px 14px', borderRadius:12,
-                border:'1px solid var(--border)', background:'var(--bg3)',
-                cursor:'pointer', fontFamily:'var(--font)' }}>
-              <div style={{ width:32, height:32, borderRadius:9, flexShrink:0,
-                background: selCat ? (selCat.color||'#7c6aff')+'22' : 'var(--bg4)',
-                display:'flex', alignItems:'center', justifyContent:'center', fontSize:18 }}>
-                {selCat ? selCat.icon : '📂'}
-              </div>
-              <span style={{ flex:1, fontSize:14, textAlign:'left',
-                color: selCat ? 'var(--text)' : 'var(--text3)',
-                fontWeight: selCat ? 600 : 400 }}>
-                {selCat ? selCat.name : `— ${t('category')} ရွေးပါ —`}
-              </span>
-              <span style={{ color:'var(--text3)', fontSize:13 }}>›</span>
+              style={{
+                width: '100%', display: 'flex', alignItems: 'center', gap: 12,
+                padding: '11px 14px', borderRadius: 12,
+                border: '1px solid var(--border)', background: 'var(--bg3)',
+                cursor: 'pointer', fontFamily: 'var(--font)',
+              }}>
+              {selCat ? (
+                <>
+                  <div style={{
+                    width: 32, height: 32, borderRadius: 9,
+                    background: (selCat.color||'#7c6aff') + '22',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18,
+                  }}>{selCat.icon}</div>
+                  <span style={{ flex: 1, fontSize: 14, fontWeight: 600, color: 'var(--text)', textAlign: 'left' }}>
+                    {selCat.name}
+                  </span>
+                  <span style={{ color: 'var(--text3)', fontSize: 12 }}>✎</span>
+                </>
+              ) : (
+                <>
+                  <div style={{
+                    width: 32, height: 32, borderRadius: 9, background: 'var(--bg4)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16,
+                  }}>📂</div>
+                  <span style={{ flex: 1, fontSize: 14, color: 'var(--text3)', textAlign: 'left' }}>
+                    — {t('category')} ရွေးပါ —
+                  </span>
+                  <span style={{ color: 'var(--text3)' }}>›</span>
+                </>
+              )}
             </button>
-          </div>
-
-          {/* Date — full width */}
-          <div className="form-group">
-            <label className="form-label">{t('date')}</label>
-            <input className="form-input" type="date" value={form.date}
-              onChange={e => set('date', e.target.value)} />
-          </div>
-
-          {/* Note — full width */}
-          <div className="form-group">
-            <label className="form-label">{t('note')} <span style={{ color:'var(--text3)', fontSize:11, fontWeight:400 }}>(optional)</span></label>
-            <input className="form-input" type="text" placeholder="မှတ်ချက်…"
-              value={form.note} onChange={e => set('note', e.target.value)} />
           </div>
 
           {/* Wallet */}
@@ -214,41 +133,30 @@ function TxModal({ onClose, onSave, onDelete, categories, wallets, initial }) {
             </div>
           )}
 
-          {saveErr && (
-            <div style={{ fontSize:12, color:'var(--red)', padding:'8px 12px',
-              background:'rgba(251,113,133,0.1)', borderRadius:8 }}>
-              ⚠ {saveErr}
+          {/* Date + Note side by side */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div className="form-group">
+              <label className="form-label">{t('date')}</label>
+              <input className="form-input" type="date" value={form.date}
+                onChange={e => set('date', e.target.value)} />
             </div>
-          )}
-          <div className="modal-actions" style={{ justifyContent: initial?.id ? 'space-between' : 'flex-end' }}>
-            {initial?.id && onDelete && (
-              <button className="btn btn-danger btn-sm"
-                onClick={() => {
-                  if (window.confirm('ဤ transaction ကို ဖျက်မည်လား?')) {
-                    onDelete(initial.id);
-                    onClose();
-                  }
-                }}>
-                🗑 Delete
-              </button>
-            )}
-            <div style={{ display:'flex', gap:8 }}>
-              <button className="btn btn-secondary" onClick={onClose}>{t('cancel')}</button>
-              <button className="btn btn-primary" disabled={!isValid || saving}
-                onClick={async () => {
-                  if (!isValid) return;
-                  setSaving(true); setSaveErr('');
-                  try {
-                    await onSave({ ...form, amount: Number(form.amount), note: form.item_name || form.note || '' });
-                    onClose();
-                  } catch(e) {
-                    setSaveErr(e.message || 'Save မအောင်မြင်ဘူး');
-                    setSaving(false);
-                  }
-                }}>
-                {saving ? 'Saving…' : t('save')}
-              </button>
+            <div className="form-group">
+              <label className="form-label">{t('note')}</label>
+              <input className="form-input" type="text" placeholder="…"
+                value={form.note} onChange={e => set('note', e.target.value)} />
             </div>
+          </div>
+
+          <div className="modal-actions">
+            <button className="btn btn-secondary" onClick={onClose}>{t('cancel')}</button>
+            <button className="btn btn-primary"
+              onClick={() => {
+                if (!form.amount || !form.date) return;
+                onSave({ ...form, amount: Number(form.amount) });
+                onClose();
+              }}>
+              {t('save')}
+            </button>
           </div>
         </div>
       </div>
@@ -272,9 +180,9 @@ export default function Transactions() {
   const { data: transactions, loading, save, del } = useTransactions();
   const { data: categories } = useCategories();
   const { data: wallets }    = useWallets();
-  const [modal,  setModal]   = useState(null);
-  const [filter, setFilter]  = useState('all');
-  const [search, setSearch]  = useState('');
+  const [modal,  setModal]  = useState(null);
+  const [filter, setFilter] = useState('all');
+  const [search, setSearch] = useState('');
 
   const filtered = useMemo(() => {
     let list = transactions;
@@ -289,18 +197,21 @@ export default function Transactions() {
     return list;
   }, [transactions, filter, search]);
 
+  // Group by date
   const grouped = useMemo(() => {
     const map = new Map();
     filtered.forEach(tx => {
-      if (!map.has(tx.date)) map.set(tx.date, []);
-      map.get(tx.date).push(tx);
+      const d = tx.date;
+      if (!map.has(d)) map.set(d, []);
+      map.get(d).push(tx);
     });
     return [...map.entries()];
   }, [filtered]);
 
   const fmtDateHeader = d => {
-    const dt   = new Date(d + 'T00:00:00');
-    const diff = Math.floor((new Date() - dt) / 86400000);
+    const dt = new Date(d + 'T00:00:00');
+    const now = new Date();
+    const diff = Math.floor((now - dt) / 86400000);
     if (diff === 0) return 'Today';
     if (diff === 1) return 'Yesterday';
     return dt.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
@@ -309,122 +220,124 @@ export default function Transactions() {
   return (
     <div className="page">
       <div className="page-header">
-        <div className="page-title">{t('transactions')}</div>
+        <div>
+          <div className="page-title">{t('transactions')}</div>
+        </div>
+        <button className="btn btn-primary" onClick={() => setModal({})}>
+          + {t('add')}
+        </button>
       </div>
 
       {/* Filter tabs */}
-      <div style={{ display:'flex', gap:0, marginBottom:12, background:'var(--bg2)',
-        padding:3, borderRadius:12, width:'fit-content' }}>
-        {[['all',t('all')],['expense',t('expense')],['income',t('income')]].map(([id,lbl]) => (
-          <button key={id} onClick={() => setFilter(id)}
-            style={{ padding:'6px 14px', borderRadius:9, border:'none', cursor:'pointer',
-              background: filter===id ? 'var(--accent)' : 'transparent',
-              color: filter===id ? '#fff' : 'var(--text3)',
-              fontSize:13, fontWeight:600, fontFamily:'var(--font)', transition:'all .15s' }}>
-            {lbl}
+      <div style={{
+        display: 'flex', gap: 6, marginBottom: 16,
+        background: 'var(--bg2)', padding: 4, borderRadius: 12, width: 'fit-content',
+      }}>
+        {[
+          { id: 'all',     label: t('all') },
+          { id: 'expense', label: t('expense') },
+          { id: 'income',  label: t('income') },
+        ].map(f => (
+          <button key={f.id} onClick={() => setFilter(f.id)}
+            style={{
+              padding: '6px 14px', borderRadius: 9, border: 'none', cursor: 'pointer',
+              background: filter === f.id ? 'var(--accent)' : 'transparent',
+              color: filter === f.id ? '#fff' : 'var(--text3)',
+              fontSize: 13, fontWeight: 600, fontFamily: 'var(--font)',
+              transition: 'all .15s',
+            }}>{f.label}
           </button>
         ))}
       </div>
 
       {/* Search */}
-      <div style={{ position:'relative', marginBottom:14 }}>
-        <span style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)',
-          color:'var(--text3)', fontSize:14 }}>🔍</span>
-        <input className="form-input" style={{ paddingLeft:36 }}
-          placeholder={t('search')+'…'}
+      <div style={{ position: 'relative', marginBottom: 16 }}>
+        <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text3)', fontSize: 14 }}>🔍</span>
+        <input className="form-input"
+          style={{ paddingLeft: 36 }}
+          placeholder={t('search') + '…'}
           value={search} onChange={e => setSearch(e.target.value)} />
       </div>
 
-      {/* List */}
+      {/* Transaction list */}
       {loading ? (
-        <div style={{ textAlign:'center', padding:48, color:'var(--text3)' }}>Loading…</div>
+        <div style={{ textAlign: 'center', padding: 48, color: 'var(--text3)' }}>Loading…</div>
       ) : grouped.length === 0 ? (
         <div className="empty-state">
           <div className="empty-state-icon">↕</div>
           <div className="empty-state-text">{t('no_tx_found')}</div>
         </div>
-      ) : grouped.map(([date, txs]) => (
-        <div key={date} style={{ marginBottom:14 }}>
-          {/* Date header */}
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center',
-            marginBottom:6, padding:'0 2px' }}>
-            <div style={{ fontSize:11, fontWeight:700, color:'var(--text3)',
-              textTransform:'uppercase', letterSpacing:'.5px' }}>
-              {fmtDateHeader(date)}
-            </div>
-            <div style={{ fontSize:11, color:'var(--text3)', display:'flex', gap:8 }}>
-              <span style={{ color:'var(--green)' }}>
-                +{fmt(txs.filter(t=>t.type==='income').reduce((s,t)=>s+Number(t.amount),0))}
-              </span>
-              <span style={{ color:'var(--red)' }}>
-                -{fmt(txs.filter(t=>t.type==='expense').reduce((s,t)=>s+Number(t.amount),0))}
-              </span>
-            </div>
-          </div>
-
-          <div className="card" style={{ padding:0, overflow:'hidden' }}>
-            {txs.map((tx, i) => (
-              <div key={tx.id} onClick={() => setModal(tx)}
-                style={{ display:'flex', alignItems:'center', gap:12,
-                  padding:'12px 14px', cursor:'pointer',
-                  borderBottom: i < txs.length-1 ? '1px solid var(--border)' : 'none' }}
-                onMouseEnter={e => e.currentTarget.style.background='var(--bg3)'}
-                onMouseLeave={e => e.currentTarget.style.background='transparent'}>
-                <div style={{ width:38, height:38, borderRadius:11, flexShrink:0,
-                  background: tx.type==='income'?'rgba(52,211,153,0.15)':'rgba(251,113,133,0.15)',
-                  display:'flex', alignItems:'center', justifyContent:'center', fontSize:19 }}>
-                  {tx.category?.icon || (tx.type==='income'?'↑':'↓')}
-                </div>
-                <div style={{ flex:1, minWidth:0 }}>
-                  <div style={{ fontSize:13, fontWeight:600, overflow:'hidden',
-                    textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-                    {tx.category?.name || 'Uncategorized'}
-                  </div>
-                  <div style={{ fontSize:11, color:'var(--text3)', marginTop:2,
-                    overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-                    {tx.note || tx.wallet?.name || '—'}
-                  </div>
-                </div>
-                <div style={{ fontSize:14, fontWeight:700, flexShrink:0,
-                  color: tx.type==='income'?'var(--green)':'var(--red)' }}>
-                  {tx.type==='income'?'+':'-'}K {fmt(tx.amount)}
-                </div>
+      ) : (
+        grouped.map(([date, txs]) => (
+          <div key={date} style={{ marginBottom: 16 }}>
+            {/* Date header with daily total */}
+            <div style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              marginBottom: 8, padding: '0 2px',
+            }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '.5px' }}>
+                {fmtDateHeader(date)}
               </div>
-            ))}
-          </div>
-        </div>
-      ))}
+              <div style={{ fontSize: 12, color: 'var(--text3)' }}>
+                <span style={{ color: 'var(--green)', marginRight: 8 }}>
+                  +{fmt(txs.filter(t=>t.type==='income').reduce((s,t)=>s+Number(t.amount),0))}
+                </span>
+                <span style={{ color: 'var(--red)' }}>
+                  -{fmt(txs.filter(t=>t.type==='expense').reduce((s,t)=>s+Number(t.amount),0))}
+                </span>
+              </div>
+            </div>
 
-      {/* ── Floating Add Button ── */}
-      <button
-        onClick={() => setModal({})}
-        style={{
-          position: 'fixed',
-          bottom: 'calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px)',
-          right: 24,
-          width: 56, height: 56,
-          borderRadius: '50%',
-          background: 'linear-gradient(135deg, var(--accent), var(--accent2))',
-          border: 'none',
-          boxShadow: '0 6px 20px rgba(255,107,53,0.5)',
-          cursor: 'pointer',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 28, color: '#fff',
-          zIndex: 40,
-          transition: 'transform .15s, box-shadow .15s',
-        }}
-        onMouseEnter={e => { e.currentTarget.style.transform='scale(1.08)'; e.currentTarget.style.boxShadow='0 8px 28px rgba(255,107,53,0.6)'; }}
-        onMouseLeave={e => { e.currentTarget.style.transform='scale(1)';    e.currentTarget.style.boxShadow='0 6px 20px rgba(255,107,53,0.5)'; }}
-        onMouseDown={e =>  { e.currentTarget.style.transform='scale(0.94)'; }}
-        onMouseUp={e =>    { e.currentTarget.style.transform='scale(1.08)'; }}
-        title="Add Transaction"
-      >＋</button>
+            <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+              {txs.map((tx, i) => (
+                <div key={tx.id} onClick={() => setModal(tx)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    padding: '12px 16px', cursor: 'pointer',
+                    borderBottom: i < txs.length-1 ? '1px solid var(--border)' : 'none',
+                    transition: 'background .1s',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'var(--bg3)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                >
+                  {/* Category icon */}
+                  <div style={{
+                    width: 40, height: 40, borderRadius: 12, flexShrink: 0,
+                    background: tx.type === 'income'
+                      ? 'rgba(52,211,153,0.15)' : 'rgba(251,113,133,0.15)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20,
+                  }}>
+                    {tx.category?.icon || (tx.type==='income' ? '↑' : '↓')}
+                  </div>
+
+                  {/* Info */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {tx.category?.name || 'Uncategorized'}
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {tx.note || tx.wallet?.name || '—'}
+                    </div>
+                  </div>
+
+                  {/* Amount */}
+                  <div style={{
+                    fontSize: 14, fontWeight: 700, flexShrink: 0,
+                    color: tx.type === 'income' ? 'var(--green)' : 'var(--red)',
+                  }}>
+                    {tx.type === 'income' ? '+' : '-'}K {fmt(tx.amount)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))
+      )}
 
       {modal !== null && (
         <TxModal
           onClose={() => setModal(null)}
-          onSave={item => save({ ...item, sub_type: item.sub_type||'general' })}
-          onDelete={id => del(id)}
+          onSave={item => save({ ...item, sub_type: item.sub_type || 'general' })}
           categories={categories}
           wallets={wallets}
           initial={modal}

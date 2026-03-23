@@ -33,6 +33,16 @@ export function AuthProvider({ children }) {
       .select('*')
       .eq('id', userId)
       .single();
+
+    // If profile was deleted (e.g. by admin) but auth session still exists,
+    // sign out immediately so the user cannot continue using the app.
+    if (!data) {
+      await supabase.auth.signOut();
+      setProfile(null);
+      setLoading(false);
+      return;
+    }
+
     setProfile(data);
     setLoading(false);
   }

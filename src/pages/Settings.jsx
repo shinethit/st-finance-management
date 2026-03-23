@@ -181,6 +181,30 @@ export default function Settings() {
   const [walletModal,  setWalletModal]  = useState(null);
   const [adjustModal,  setAdjustModal]  = useState(null);
 
+  // Delete account state
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [deleteInput,   setDeleteInput]   = useState('');
+  const [deleting,      setDeleting]      = useState(false);
+  const [deleteError,   setDeleteError]   = useState('');
+
+  const handleDeleteAccount = async () => {
+    if (deleteInput !== 'DELETE') {
+      setDeleteError('Please type DELETE to confirm.');
+      return;
+    }
+    setDeleting(true);
+    setDeleteError('');
+    try {
+      const { error } = await supabase.rpc('delete_own_account');
+      if (error) throw error;
+      // Session is now invalid; sign out client-side
+      await supabase.auth.signOut();
+    } catch (e) {
+      setDeleteError(e.message || 'Failed to delete account. Please try again.');
+      setDeleting(false);
+    }
+  };
+
   const handleSave = async () => {
     setSaving(true);
     await supabase.from('profiles').update({
@@ -307,6 +331,54 @@ export default function Settings() {
           <button className="btn btn-danger" onClick={signOut} style={{ alignSelf:'flex-start' }}>
             {t('sign_out')}
           </button>
+        </div>
+      </Section>
+
+      {/* ── Danger Zone ── */}
+      <Section title="Danger Zone">
+        <div style={{ padding:'14px 16px', borderRadius:12, border:'1px solid rgba(251,113,133,0.35)', background:'rgba(251,113,133,0.05)' }}>
+          <div style={{ fontWeight:700, fontSize:14, color:'var(--red)', marginBottom:6 }}>
+            🗑️ Delete Account
+          </div>
+          <div style={{ fontSize:13, color:'var(--text2)', lineHeight:1.7, marginBottom:12 }}>
+            Account ကို ဖျက်လိုက်ရင် သင့် profile, transactions, categories, debts, savings အကုန် ပျက်မယ်။<br/>
+            <strong style={{ color:'var(--text)' }}>Wallet တွေကတော့ ကျန်နေမယ်</strong> — တူညီတဲ့ email နဲ့ ပြန်လုပ်ရင် ပြန်ရမယ်။
+          </div>
+
+          {!deleteConfirm ? (
+            <button
+              className="btn btn-danger btn-sm"
+              onClick={() => { setDeleteConfirm(true); setDeleteInput(''); setDeleteError(''); }}>
+              Delete My Account
+            </button>
+          ) : (
+            <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+              <div style={{ fontSize:13, fontWeight:600, color:'var(--red)' }}>
+                Confirm လုပ်ဖို့ "<strong>DELETE</strong>" လို့ ရိုက်ထည့်ပါ
+              </div>
+              <input
+                className="form-input"
+                placeholder="DELETE"
+                value={deleteInput}
+                onChange={e => { setDeleteInput(e.target.value); setDeleteError(''); }}
+                style={{ borderColor: deleteError ? 'var(--red)' : undefined }}
+                autoFocus
+              />
+              {deleteError && (
+                <div style={{ fontSize:12, color:'var(--red)', background:'rgba(251,113,133,0.1)', padding:'8px 12px', borderRadius:8 }}>
+                  {deleteError}
+                </div>
+              )}
+              <div style={{ display:'flex', gap:8 }}>
+                <button className="btn btn-secondary btn-sm" onClick={() => setDeleteConfirm(false)} disabled={deleting}>
+                  Cancel
+                </button>
+                <button className="btn btn-danger btn-sm" onClick={handleDeleteAccount} disabled={deleting || deleteInput !== 'DELETE'}>
+                  {deleting ? 'Deleting…' : 'Confirm Delete'}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </Section>
 
