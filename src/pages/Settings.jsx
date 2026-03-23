@@ -341,8 +341,7 @@ export default function Settings() {
             🗑️ Delete Account
           </div>
           <div style={{ fontSize:13, color:'var(--text2)', lineHeight:1.7, marginBottom:12 }}>
-            Account ကို ဖျက်လိုက်ရင် သင့် profile, transactions, categories, debts, savings အကုန် ပျက်မယ်။<br/>
-            <strong style={{ color:'var(--text)' }}>Wallet တွေကတော့ ကျန်နေမယ်</strong> — တူညီတဲ့ email နဲ့ ပြန်လုပ်ရင် ပြန်ရမယ်။
+            Account ဖျက်လိုက်ရင် အကုန်ပျက်မယ်။
           </div>
 
           {!deleteConfirm ? (

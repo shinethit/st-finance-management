@@ -242,7 +242,7 @@ function UserDetailModal({ user, onClose, onBlock, onUnblock, onDelete }) {
         <div style={{ marginBottom:18, padding:'12px 14px', borderRadius:10, border:'1px solid rgba(251,113,133,0.35)', background:'rgba(251,113,133,0.05)' }}>
           <div style={{ fontWeight:700, fontSize:13, color:'var(--red)', marginBottom:6 }}>🗑️ Delete This Account</div>
           <div style={{ fontSize:12, color:'var(--text2)', marginBottom:10, lineHeight:1.6 }}>
-            Profile, transactions, categories, debts အကုန် ပျက်မယ်။ Wallet တွေကတော့ ကျန်မယ် (email ချိတ်ထားမယ်)။
+            Account ဖျက်လိုက်ရင် အကုန်ပျက်မယ်။
           </div>
           {!delConfirm ? (
             <button className="btn btn-danger btn-sm" onClick={()=>setDelConfirm(true)}>
